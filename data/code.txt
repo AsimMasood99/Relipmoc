@@ -1,5 +1,5 @@
 fn int my_fn(int x, float y) {
-    string my_str = "hmm";
+    string my_str = "h\"m\"; ()\\\"m";
     bool my_bool = x == 40;
     return x;
 }

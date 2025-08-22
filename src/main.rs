@@ -46,11 +46,25 @@ fn lex(code: String) -> Vec<Token> {
         println!("{}", &code[curr..]);
 
         let mut idx = if string_lit {
-            let mut _idx = code[curr..].find(&T_DOUBLE_QUOTE.sym()).unwrap() + curr;
-            while code.chars().nth(_idx - 1).unwrap() == '\\' {
-                _idx = code[(_idx+1)..].find(&T_DOUBLE_QUOTE.sym()).unwrap() + _idx + 1;
+            let mut _idx = curr;
+            loop {
+                if let Some(pos) = code[_idx..].find(&T_DOUBLE_QUOTE.sym()) {
+                    _idx += pos;
+                    let mut backslash_count = 0;
+                    let mut check_pos = _idx;
+                    while check_pos > curr && code.chars().nth(check_pos - 1).unwrap() == '\\' {
+                        backslash_count += 1;
+                        check_pos -= 1;
+                    }
+                    // not escaped when back slash count is even
+                    if backslash_count % 2 == 0 {
+                        break;
+                    }
+                    _idx += 1;
+                } else {
+                    panic!("Unclosed string literal");
+                }
             }
-
             _idx
         } else {
             let _idx = code[curr..].find(find_delim).unwrap() + curr;
