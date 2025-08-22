@@ -40,14 +40,28 @@ fn lex(code: String) -> Vec<Token> {
     let code = code.trim().to_string();
 
     let mut curr = 0;
+    let mut string_lit = false;
 
     while curr < code.len() {
         println!("{}", &code[curr..]);
-        let mut idx = code[curr..].find(find_delim).unwrap() + curr;
 
-        if idx == curr {
-            idx += 1; // abhi tak delimeters 1 length k hain uper
-        }
+        let mut idx = if string_lit {
+            let mut _idx = code[curr..].find(&T_DOUBLE_QUOTE.sym()).unwrap() + curr;
+            while code.chars().nth(_idx - 1).unwrap() == '\\' {
+                _idx = code[(_idx+1)..].find(&T_DOUBLE_QUOTE.sym()).unwrap() + _idx + 1;
+            }
+
+            _idx
+        } else {
+            let _idx = code[curr..].find(find_delim).unwrap() + curr;
+
+            if _idx == curr {
+                _idx + 1 // abhi tak delimeters 1 length k hain uper
+            } else {
+                _idx
+            }
+        };
+        
 
         let substr = code[curr..idx].to_string();
         println!("Abhi wala: {substr}\n");
@@ -69,6 +83,7 @@ fn lex(code: String) -> Vec<Token> {
         }
         else if substr == T_DOUBLE_QUOTE.sym() {
             tokens.push(T_DOUBLE_QUOTE);
+            string_lit = !string_lit;
         }
         else if substr == T_ROUND_BRACKET_OPEN.sym() {
             tokens.push(T_ROUND_BRACKET_OPEN);
@@ -103,10 +118,15 @@ fn lex(code: String) -> Vec<Token> {
         else if substr == T_EQUALS_OPR.sym() {
             tokens.push(T_EQUALS_OPR);
         }
-        else {
-            tokens.push(T_IDENTIFIER(substr));
+        else if string_lit {
+            tokens.push(T_STRINGLIT(substr.clone()));
+            string_lit = false;
+            tokens.push(T_DOUBLE_QUOTE);
+            idx += 1; // move past closing quote
         }
-
+        else {
+            tokens.push(T_IDENTIFIER(substr.clone()));
+        }
         curr = idx;
         if curr < code.len() {
             while code.chars().nth(curr).unwrap().is_whitespace() {

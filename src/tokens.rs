@@ -4,6 +4,7 @@ pub enum Token {
     T_FUNCTION, // fn
 
     T_IDENTIFIER(String),
+    T_STRINGLIT(String),
 
     T_ROUND_BRACKET_OPEN, // (
     T_ROUND_BRACKET_CLOSE, // )
@@ -32,6 +33,7 @@ impl Token {
             Token::T_FUNCTION => String::from("fn"),
 
             Token::T_IDENTIFIER(i) => i.clone(),
+            Token::T_STRINGLIT(s) => s.clone(),
 
             Token::T_ROUND_BRACKET_OPEN => String::from("("),
             Token::T_ROUND_BRACKET_CLOSE => String::from(")"),
@@ -47,7 +49,7 @@ impl Token {
 
             Token::T_ASSIGNMENT_OPR => String::from("="),
             Token::T_EQUALS_OPR => String::from("=="),
-            
+
             Token::T_INT => String::from("int"),
             Token::T_FLOAT => String::from("float"),
             Token::T_BOOL => String::from("bool"),
