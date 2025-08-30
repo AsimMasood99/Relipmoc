@@ -31,6 +31,11 @@ fn find_delim(c: char) -> bool {
             ';',
             '"',
             '=',
+            '!',
+            '<',
+            '>',
+            '&',
+            '|',
         ].contains(&c)
 }
 
@@ -131,6 +136,52 @@ fn lex(code: String) -> Vec<Token> {
                 idx = curr + 2;
             } else {
                 tokens.push(T_ASSIGNMENT_OPR);
+            }
+        }
+        else if substr == "!" {
+            if curr + 1 < code.len() && &code[curr..curr + 2] == "!=" {
+                tokens.push(T_NOT_EQUALS_OPR);
+                idx = curr + 2;
+            } else {
+                tokens.push(T_NOT);
+            }
+        }
+        else if substr == "<" {
+            if curr + 1 < code.len() && &code[curr..curr + 2] == "<=" {
+                tokens.push(T_LESS_THAN_EQUAL_TO_OPR);
+                idx = curr + 2;
+            } else if curr + 1 < code.len() && &code[curr..curr + 2] == "<<" {
+                tokens.push(T_LEFT_SHIFT_OPR);
+                idx = curr + 2;
+            } else {
+                tokens.push(T_LESS_THAN_OPR);
+            }
+        }
+        else if substr == ">" {
+            if curr + 1 < code.len() && &code[curr..curr + 2] == ">=" {
+                tokens.push(T_GREATER_THAN_EQUAL_TO_OPR);
+                idx = curr + 2;
+            } else if curr + 1 < code.len() && &code[curr..curr + 2] == ">>" {
+                tokens.push(T_RIGHT_SHIFT_OPR);
+                idx = curr + 2;
+            } else {
+                tokens.push(T_GREATER_THAN_OPR);
+            }
+        }
+        else if substr == "&" {
+            if curr + 1 < code.len() && &code[curr..curr + 2] == "&&" {
+                tokens.push(T_AND_OPR);
+                idx = curr + 2;
+            } else {
+                tokens.push(T_AND_OPR); // single & treated as and too
+            }
+        }
+        else if substr == "|" {
+            if curr + 1 < code.len() && &code[curr..curr + 2] == "||" {
+                tokens.push(T_OR_OPR);
+                idx = curr + 2;
+            } else {
+                tokens.push(T_OR_OPR); // single | treated as OR too
             }
         }
         else if string_lit {

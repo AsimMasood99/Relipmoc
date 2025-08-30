@@ -20,6 +20,16 @@ pub enum Token {
 
     T_ASSIGNMENT_OPR, // =
     T_EQUALS_OPR, // ==
+    T_NOT, // !
+    T_NOT_EQUALS_OPR, // !=
+    T_LESS_THAN_OPR, // <
+    T_GREATER_THAN_OPR, // >
+    T_LESS_THAN_EQUAL_TO_OPR, // <=
+    T_GREATER_THAN_EQUAL_TO_OPR, // >=
+    T_AND_OPR, // && , &
+    T_OR_OPR, // || , |
+    T_RIGHT_SHIFT_OPR, // >>
+    T_LEFT_SHIFT_OPR, // <<
 
     T_INT, // 0
     T_FLOAT, // 0.0
