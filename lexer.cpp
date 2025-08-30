@@ -66,11 +66,83 @@ std::unordered_map<std::string, std::string> tokenizationMap =
 };
 
 
+
+//Utility Functions
 bool isDelim(const char& character)
 {
     return (character == ' ' || character == '\n');
 }
 
+bool isNum(const std::string& bufferString)
+{
+   
+    bool hasDecimal = false;
+    
+    int startIdx = 0;
+    if (bufferString[0] == '-')
+    {
+        startIdx = 1;
+    }
+    
+    // Edge case minus sign should not be just a string
+    if (startIdx == 1 && bufferString.length() == 1)
+    {
+        return false;
+    }
+    
+    for (int i = startIdx; i < bufferString.length(); i++) 
+    {
+        char c = bufferString[i];
+        
+        if (c == '.') 
+        {
+            if (hasDecimal)
+            {
+                return false;
+            }
+
+            hasDecimal = true;
+        }
+        else if (!isdigit(c)) 
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+
+//The Big One
+void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream& outputFile, const bool isStringFlag)
+{
+    if (isStringFlag)
+    {
+        outputFile << "T_STRING(\"" << bufferString << "\")," << " ";
+        return;
+    }
+
+    //If is Num save token as T_CONST_NUM_VALUE
+    if (isNum(bufferString))
+    {
+        outputFile << "T_CONST_NUM_VALUE(" << bufferString << ")," << " ";
+        return;
+    }
+    
+    //See if is a keyword or an operator
+    auto it = tokenizationMap.find(bufferString);
+
+    //it's a keyword/operator
+    if (it != tokenizationMap.end())
+    {
+        outputFile << it->second << "," << " ";
+
+    }
+    else //it is an identifier
+    {
+        outputFile << "T_IDENTIFIER(\"" << bufferString << "\")," << " ";
+    }
+}
 
 void lex(const std::string& codeFile)
 {
@@ -94,7 +166,8 @@ void lex(const std::string& codeFile)
     {
         if (isDelim(currCharacter));
         {
-            writeTokenToFile(currentBuffer, outputFile);
+            //TODO: handle is string case
+            convertStringAndWriteToFile(currentBuffer, outputFile, false);
             currentBuffer.clear();
         }
     }
