@@ -20,19 +20,18 @@ fn get_code() -> String {
 fn find_delim(c: char) -> bool {
     return c.is_whitespace() ||
         [
-            T_ROUND_BRACKET_OPEN.sym(),
-            T_ROUND_BRACKET_CLOSE.sym(),
-            T_SQUARE_BRACKET_OPEN.sym(),
-            T_SQUARE_BRACKET_CLOSE.sym(),
-            T_CURLY_BRACKET_OPEN.sym(),
-            T_CURLY_BRACKET_CLOSE.sym(),
-            T_COMMA.sym(),
-            T_DOT.sym(),
-            T_SEMICOLON.sym(),
-            T_DOUBLE_QUOTE.sym(),
-            T_ASSIGNMENT_OPR.sym(),
-            T_EQUALS_OPR.sym(),
-        ].contains(&c.to_string())
+            '(',
+            ')',
+            '[',
+            ']',
+            '{',
+            '}',
+            ',',
+            //'.',
+            ';',
+            '"',
+            '=',
+        ].contains(&c)
 }
 
 fn lex(code: String) -> Vec<Token> {
@@ -48,7 +47,7 @@ fn lex(code: String) -> Vec<Token> {
         let mut idx = if string_lit {
             let mut _idx = curr;
             loop {
-                if let Some(pos) = code[_idx..].find(&T_DOUBLE_QUOTE.sym()) {
+                if let Some(pos) = code[_idx..].find('"') {
                     _idx += pos;
                     let mut backslash_count = 0;
                     let mut check_pos = _idx;
@@ -80,56 +79,56 @@ fn lex(code: String) -> Vec<Token> {
         let substr = code[curr..idx].to_string();
         println!("Abhi wala: {substr}\n");
 
-        if substr == T_FUNCTION.sym() {
+        if substr == "fn" {
             tokens.push(T_FUNCTION);
         }
-        else if substr == T_INT.sym() {
+        else if substr == "int" {
             tokens.push(T_INT);
         }
-        else if substr == T_FLOAT.sym() {
+        else if substr == "float" {
             tokens.push(T_FLOAT);
         }
-        else if substr == T_BOOL.sym() {
+        else if substr == "bool" {
             tokens.push(T_BOOL);
         }
-        else if substr == T_STRING.sym() {
+        else if substr == "string" {
             tokens.push(T_STRING);
         }
-        else if substr == T_DOUBLE_QUOTE.sym() {
+        else if substr == "\"" {
             tokens.push(T_DOUBLE_QUOTE);
             string_lit = !string_lit;
         }
-        else if substr == T_ROUND_BRACKET_OPEN.sym() {
+        else if substr == "(" {
             tokens.push(T_ROUND_BRACKET_OPEN);
         }
-        else if substr == T_ROUND_BRACKET_CLOSE.sym() {
+        else if substr == ")" {
             tokens.push(T_ROUND_BRACKET_CLOSE);
         }
-        else if substr == T_SQUARE_BRACKET_OPEN.sym() {
+        else if substr == "[" {
             tokens.push(T_SQUARE_BRACKET_OPEN);
         }
-        else if substr == T_SQUARE_BRACKET_CLOSE.sym() {
+        else if substr == "]" {
             tokens.push(T_SQUARE_BRACKET_CLOSE);
         } 
-        else if substr == T_CURLY_BRACKET_OPEN.sym() {
+        else if substr == "{" {
             tokens.push(T_CURLY_BRACKET_OPEN);
         } 
-        else if substr == T_CURLY_BRACKET_CLOSE.sym() {
+        else if substr == "}" {
             tokens.push(T_CURLY_BRACKET_CLOSE);
         } 
-        else if substr == T_COMMA.sym() {
+        else if substr == "," {
             tokens.push(T_COMMA);
         } 
-        else if substr == T_DOT.sym() {
-            tokens.push(T_DOT);
-        } 
-        else if substr == T_SEMICOLON.sym() {
+        // else if substr == "." {
+        //     tokens.push(T_DOT);
+        // } 
+        else if substr == ";" {
             tokens.push(T_SEMICOLON);
         }
-        else if substr == T_ASSIGNMENT_OPR.sym() {
+        else if substr == "=" {
             tokens.push(T_ASSIGNMENT_OPR);
         }
-        else if substr == T_EQUALS_OPR.sym() {
+        else if substr == "==" {
             tokens.push(T_EQUALS_OPR);
         }
         else if string_lit {
