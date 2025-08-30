@@ -223,6 +223,10 @@ fn lex(code: String) -> Vec<Token> {
             tokens.push(T_CONST_BOOL(substr == "true"));
         }
         else {
+            // not the job of lexer but requirment ma ikha ha...
+            if substr.chars().next().unwrap().is_digit(10) {
+                panic!("Identifiers should not start with numbers: {}", substr);
+            }
             tokens.push(T_IDENTIFIER(substr.clone()));
         }
         curr = idx;
