@@ -40,6 +40,7 @@ fn find_delim(c: char) -> bool {
             '-',
             '*',
             '/',
+            '#',
         ].contains(&c)
 }
 
@@ -52,6 +53,13 @@ fn lex(code: String) -> Vec<Token> {
 
     while curr < code.len() {
         //println!("{}", &code[curr..]);
+
+        // current ka baad spaced khatam karo
+        if curr < code.len() {
+            while code.chars().nth(curr).unwrap().is_whitespace() {
+                curr += 1;
+            }
+        }
 
         let mut idx = if string_lit {
             let mut _idx = curr;
@@ -87,6 +95,15 @@ fn lex(code: String) -> Vec<Token> {
 
         let substr = code[curr..idx].to_string();
         //println!("Abhi wala: {substr}\n");
+
+        if &code[curr..curr + 1] == "#" {
+            if let Some(pos) = code[curr..].find('\n') {
+                curr += pos + 1;
+                continue;
+            } else {
+                break;
+            }
+        }
 
         if substr == "fn" {
             tokens.push(T_FUNCTION);
@@ -246,11 +263,6 @@ fn lex(code: String) -> Vec<Token> {
             tokens.push(T_IDENTIFIER(substr.clone()));
         }
         curr = idx;
-        if curr < code.len() {
-            while code.chars().nth(curr).unwrap().is_whitespace() {
-                curr += 1;
-            }
-        }
     }
 
 
