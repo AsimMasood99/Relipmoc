@@ -12,6 +12,9 @@ pub enum Token {
 
     T_IDENTIFIER(String),
     T_STRINGLIT(String),
+    T_CONST_INT(i64),
+    T_CONST_FLOAT(f64),
+    T_CONST_BOOL(bool),
 
     T_ROUND_BRACKET_OPEN, // (
     T_ROUND_BRACKET_CLOSE, // )

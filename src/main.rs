@@ -211,6 +211,17 @@ fn lex(code: String) -> Vec<Token> {
             tokens.push(T_DOUBLE_QUOTE);
             idx += 1; // move past closing quote
         }
+        else if substr.chars().all(|c| c.is_digit(10)) {
+            let val: i64 = substr.parse().unwrap();
+            tokens.push(T_CONST_INT(val));
+        }
+        else if substr.parse::<f64>().is_ok() {
+            let val: f64 = substr.parse().unwrap();
+            tokens.push(T_CONST_FLOAT(val));
+        }
+        else if substr == "true" || substr == "false" {
+            tokens.push(T_CONST_BOOL(substr == "true"));
+        }
         else {
             tokens.push(T_IDENTIFIER(substr.clone()));
         }
