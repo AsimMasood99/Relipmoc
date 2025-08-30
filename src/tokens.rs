@@ -2,6 +2,13 @@
 #[allow(non_camel_case_types)]
 pub enum Token {
     T_FUNCTION, // fn
+    T_IF, // if
+    T_ELSE, // else
+    T_ELSE_IF, // elif
+    T_WHILE, // while
+    T_FOR, // for
+    T_RETURN, // return
+    T_PRINT, // print
 
     T_IDENTIFIER(String),
     T_STRINGLIT(String),

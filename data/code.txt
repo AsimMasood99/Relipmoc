@@ -3,5 +3,13 @@ fn int my_fn(int x, float y) {
     bool my_bool = x == 40;
     bool my_other_bool = x != 5 && x <= 10;
     int shifted = 5 << 1;
+    float my_val = 6.9;
+    if (my_val + 5 >= 10) {
+        print("yes");
+    } elif (my_val + 5 < 10) {
+        print("no");
+    } else {
+        print("unfortuante")
+    }
     return x;
 }

@@ -87,6 +87,27 @@ fn lex(code: String) -> Vec<Token> {
         if substr == "fn" {
             tokens.push(T_FUNCTION);
         }
+        else if substr == "if" {
+            tokens.push(T_IF);
+        }
+        else if substr == "else" {
+            tokens.push(T_ELSE);
+        }
+        else if substr == "elif" {
+            tokens.push(T_ELSE_IF);
+        }
+        else if substr == "while" {
+            tokens.push(T_WHILE);
+        }
+        else if substr == "for" {
+            tokens.push(T_FOR);
+        }
+        else if substr == "return" {
+            tokens.push(T_RETURN);
+        }
+        else if substr == "print" {
+            tokens.push(T_PRINT);
+        }
         else if substr == "int" {
             tokens.push(T_INT);
         }
