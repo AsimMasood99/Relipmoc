@@ -1,12 +1,14 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <fstream>
 
 
 //Other than below tokens T_indentifier("string")
 //T_CONST_NUM_VALUE(Value)
 
-std::unordered_map<std::string, std::string> tokenizationMap = {
+std::unordered_map<std::string, std::string> tokenizationMap = 
+{
     // Conditional
     {"if", "T_IF"},
     {"else", "T_ELSE"},
@@ -62,3 +64,40 @@ std::unordered_map<std::string, std::string> tokenizationMap = {
     {";", "T_SEMICOLON"},
     {",", "T_COMMA"},
 };
+
+
+bool isDelim(const char& character)
+{
+    return (character == ' ' || character == '\n');
+}
+
+
+void lex(const std::string& codeFile)
+{
+    std::ifstream file(codeFile);
+    if (!file.is_open())
+    {
+        std::cerr << "Error: Could not open file " << codeFile << std::endl;
+        return;
+    }
+
+    std::ofstream outputFile("tokensOutput.txt");
+    if (!outputFile.is_open())
+    {
+        std::cerr << "Error: Could not open output file." << std::endl;
+        return;
+    }
+
+    std::string currentBuffer;
+    char currCharacter;
+    while (file.get(currCharacter))
+    {
+        if (isDelim(currCharacter));
+        {
+            writeTokenToFile(currentBuffer, outputFile);
+            currentBuffer.clear();
+        }
+    }
+
+    file.close();
+}
