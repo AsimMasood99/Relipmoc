@@ -126,10 +126,12 @@ fn lex(code: String) -> Vec<Token> {
             tokens.push(T_SEMICOLON);
         }
         else if substr == "=" {
-            tokens.push(T_ASSIGNMENT_OPR);
-        }
-        else if substr == "==" {
-            tokens.push(T_EQUALS_OPR);
+            if curr + 1 < code.len() && &code[curr..curr + 2] == "==" {
+                tokens.push(T_EQUALS_OPR);
+                idx = curr + 2;
+            } else {
+                tokens.push(T_ASSIGNMENT_OPR);
+            }
         }
         else if string_lit {
             tokens.push(T_STRINGLIT(substr.clone()));
