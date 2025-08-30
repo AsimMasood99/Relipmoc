@@ -36,6 +36,10 @@ fn find_delim(c: char) -> bool {
             '>',
             '&',
             '|',
+            '+',
+            '-',
+            '*',
+            '/',
         ].contains(&c)
 }
 
@@ -204,6 +208,18 @@ fn lex(code: String) -> Vec<Token> {
             } else {
                 tokens.push(T_OR_OPR); // single | treated as OR too
             }
+        }
+        else if substr == "+" {
+            tokens.push(T_PLUS_OPR);
+        }
+        else if substr == "-" {
+            tokens.push(T_MINUS_OPR);
+        }
+        else if substr == "*" {
+            tokens.push(T_MULTIPLY_OPR);
+        }
+        else if substr == "/" {
+            tokens.push(T_DIVIDE_OPR);
         }
         else if string_lit {
             tokens.push(T_STRINGLIT(substr.clone()));

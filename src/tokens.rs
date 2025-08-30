@@ -41,6 +41,11 @@ pub enum Token {
     T_RIGHT_SHIFT_OPR, // >>
     T_LEFT_SHIFT_OPR, // <<
 
+    T_PLUS_OPR, // +
+    T_MINUS_OPR, // -
+    T_MULTIPLY_OPR, // *
+    T_DIVIDE_OPR, // /
+
     T_INT, // 0
     T_FLOAT, // 0.0
     T_BOOL, // true | false
