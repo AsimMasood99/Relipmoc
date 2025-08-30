@@ -47,7 +47,7 @@ fn lex(code: String) -> Vec<Token> {
     let mut string_lit = false;
 
     while curr < code.len() {
-        println!("{}", &code[curr..]);
+        //println!("{}", &code[curr..]);
 
         let mut idx = if string_lit {
             let mut _idx = curr;
@@ -82,7 +82,7 @@ fn lex(code: String) -> Vec<Token> {
         
 
         let substr = code[curr..idx].to_string();
-        println!("Abhi wala: {substr}\n");
+        //println!("Abhi wala: {substr}\n");
 
         if substr == "fn" {
             tokens.push(T_FUNCTION);
