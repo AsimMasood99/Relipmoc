@@ -10,7 +10,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Compiler flags for better debugging and warnings
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wpedantic")
+    # set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wpedantic")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 endif()
 
@@ -83,7 +84,5 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Include directory: ${RELIPMOC_INCLUDE_DIR}")
-message(STATUS "All source files: ${ALL_SOURCES}")
-message(STATUS "Library sources: ${LIB_SOURCES}")
-message(STATUS "Main source: ${MAIN_SOURCE}")
+message(STATUS "Source files: ${SOURCES}")
 message(STATUS "Header files: ${HEADERS}")
