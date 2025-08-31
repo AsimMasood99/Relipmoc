@@ -38,6 +38,8 @@ std::unordered_map<std::string, std::string> tokenizationMap =
     {"==", "T_IS_EQUAL"},
     {"!=", "T_IS_NOT_EQUAL"},
     {"+", "T_PLUS"},
+    {"++", "T_INCREMENT"},
+    {"--", "T_DECREMENT"},
     {"-", "T_MINUS"},
     {"*", "T_MULTIPLY"},
     {"/", "T_DIVIDE"},
@@ -133,10 +135,30 @@ bool isInvalidIdentifier(const std::string& bufferString)
 
     return false;
 }
+bool isOperator(const char& character)
+{
+    std::string operators = "+-*/%<>=!&|^~";
+    return operators.find(character) != std::string::npos;
+}
+bool isDoubleOperator(const char& firstChar, const char& secondChar)
+{
+    std::string doubleOperators[] = {"<=", ">=", "==", "!=", "&&", "||", "++", "--", "<<", ">>"};
+    std::string combined;
+    combined += firstChar;
+    combined += secondChar;
+
+    for (auto itr = std::begin(doubleOperators); itr != std::end(doubleOperators); ++itr)
+    {
+        if (combined == *itr)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 //The Big One
-//TODO: Handle isString Flag
 void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream& outputFile, const bool isStringFlag)
 {
     bool isFloatFlag = false;
@@ -238,6 +260,29 @@ void lex(const std::string& codeFile)
         }
         else // Normal Case
         {
+            //Operators case
+            if(isOperator(currCharacter) && currentBuffer.empty()) //just read a new operator from start
+            {
+                currentBuffer += currCharacter;
+                //PEAK NEXT TO SEE IF TWO OPERATOR ONE
+                char nextCharacter = file.peek();
+                if (file.eof() || !isOperator(nextCharacter))
+                {
+                    convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                    currentBuffer.clear();
+                }
+                else
+                {
+                    if(isDoubleOperator(currCharacter, nextCharacter))
+                    {
+                        currentBuffer += nextCharacter;
+                        file.get();
+                        convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                        currentBuffer.clear();
+                    }
+                }
+                continue;
+            }
             if(currCharacter == '\"')
             {
                 if (!currentBuffer.empty()) //string starting so clear buffer
