@@ -19,6 +19,18 @@ using namespace std;
 #include "lexer.hpp"
 #include <sstream>
 
+bool try_parse_double(const string& str) {
+    try {
+        stod(str);
+        return true;
+    } catch (const invalid_argument& ia) {
+        return false;
+    } catch (const out_of_range& oor) {
+        return false;
+    }
+}
+
+
 string get_code() {
     // TODO: allow custom file path
     ifstream file("data/code.txt");
@@ -32,17 +44,6 @@ string get_code() {
     return buffer.str();
 }
 
-bool try_parse_double(const string& str) {
-    try {
-        stod(str);
-        return true;
-    } catch (const invalid_argument& ia) {
-        return false;
-    } catch (const out_of_range& oor) {
-        return false;
-    }
-}
-
 bool find_delim(char c) {
     return isspace(c) ||
            (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' ||
@@ -54,7 +55,9 @@ bool find_delim(char c) {
 vector<Token> lex(const string& code) {
     vector<Token> tokens;
     string trimmed_code = code;
-
+    
+    cout<<"before trimming"<<trimmed_code.length()<<"\n";
+    
     // Trim leading and trailing whitespace
     size_t first = trimmed_code.find_first_not_of(" \t\n\r");
     if (string::npos == first) {
@@ -63,6 +66,9 @@ vector<Token> lex(const string& code) {
     size_t last = trimmed_code.find_last_not_of(" \t\n\r");
     trimmed_code = trimmed_code.substr(first, (last - first + 1));
 
+    cout<<"After trimming: "<<trimmed_code.length()<<"\n";
+    cout<<"trimmed string: "<<trimmed_code<<"\n";
+    
     size_t curr = 0;
     bool string_lit = false;
 
@@ -91,31 +97,31 @@ vector<Token> lex(const string& code) {
                     _idx++;
                 } else {
                     throw runtime_error("Unclosed string literal");
-                } 
+                }
             }
             if (idx == string::npos) {
                 throw runtime_error("Unclosed string literal");
             }
         } else {
             size_t found = string::npos;
-            for (char delim : string("(){}[]\" ,;=!<>&|+*-/")) {
-                size_t pos = trimmed_code.find(delim, curr);
-                if (pos != string::npos && (found == string::npos || pos < found)) {
-                    found = pos; // keep the earliest occurrence
+            for (size_t i = curr; i < trimmed_code.length(); ++i) {
+                if (find_delim(trimmed_code[i])) {
+                    found = i;
+                    break; // Stop at the first delimiter found
                 }
             }
 
             if (found == string::npos) {
                 idx = trimmed_code.length();
             } else {
-                idx = found + curr;
+                idx = found;
             }
             if (idx == curr) {
                 idx++; // Delimiters are 1 length
             }
         }
-
-        string substr = trimmed_code.substr(curr, idx - curr);
+        int length_to_take = idx-curr;
+        string substr = trimmed_code.substr(curr, length_to_take);
 
         if (substr == "#") {
             size_t newline_pos = trimmed_code.find('\n', curr);
@@ -127,6 +133,8 @@ vector<Token> lex(const string& code) {
             }
         }
 
+        cout<<"substr length<< "<<substr.length()<<" \n";
+        
         if (substr == "fn") {
             tokens.push_back({TokenType::T_FUNCTION, ""});
         } else if (substr == "if") {
@@ -256,13 +264,39 @@ vector<Token> lex(const string& code) {
     return tokens;
 }
 
+void print_tokens(const vector<Token>& tokens) {
+    cout << "[";
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        const Token& token = tokens[i];
+        switch (token.type) {
+            case TokenType::T_FUNCTION: cout << "T_FUNCTION"; break;
+            case TokenType::T_INT: cout << "T_INT"; break;
+            case TokenType::T_IDENTIFIER: cout << "T_IDENTIFIER(\"" << token.value << "\")"; break;
+            case TokenType::T_STRINGLIT: cout << "T_STRINGLIT(\"" << token.value << "\")"; break;
+            case TokenType::T_CONST_INT: cout << "T_CONST_INT(" << token.value << ")"; break;
+            case TokenType::T_CONST_FLOAT: cout << "T_CONST_FLOAT(" << token.value << ")"; break;
+            case TokenType::T_CONST_BOOL: cout << "T_CONST_BOOL(" << (token.value == "true" ? "true" : "false") << ")"; break;
+            case TokenType::T_ROUND_BRACKET_OPEN: cout << "T_ROUND_BRACKET_OPEN"; break;
+            case TokenType::T_ROUND_BRACKET_CLOSE: cout << "T_ROUND_BRACKET_CLOSE"; break;
+            case TokenType::T_COMMA: cout << "T_COMMA"; break;
+            case TokenType::T_SEMICOLON: cout << "T_SEMICOLON"; break;
+            case TokenType::T_ASSIGNMENT_OPR: cout << "T_ASSIGNMENT_OPR"; break;
+            case TokenType::T_EQUALS_OPR: cout << "T_EQUALS_OPR"; break;
+            // Add other cases as needed
+            default: cout << "UNKNOWN"; break;
+        }
+        if (i < tokens.size() - 1) {
+            cout << ", ";
+        }
+    }
+    cout << "]" << endl;
+}
+
 int main() {
     string code = get_code();
     vector<Token> tokens = lex(code);
 
-    for (const auto& token : tokens) {
-        cout << "Type: " << static_cast<int>(token.type) << ", Value: " << token.value << endl;
-    }
+    print_tokens(tokens);
 
     return 0;
 }
