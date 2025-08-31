@@ -123,7 +123,7 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
 
     if (isStringFlag)
     {
-        outputFile << "T_STRING(\"" << bufferString << "\")," << " ";
+        outputFile <<tokenizationMap["\""] <<", "<< "T_STRING(\"" << bufferString << "\"), " << tokenizationMap["\""] <<", ";
         return;
     }
 
@@ -132,11 +132,11 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
     {
         if (isFloatFlag)
         {
-            outputFile << "T_CONST_NUM_FLOAT(" << bufferString << ")," << " ";
+            outputFile << "T_CONST_NUM_FLOAT(" << bufferString << "), ";
         }
         else
         {
-            outputFile << "T_CONST_NUM_INT(" << bufferString << ")," << " ";
+            outputFile << "T_CONST_NUM_INT(" << bufferString << "), ";
         }
         return;
     }
@@ -147,12 +147,12 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
     //it's a keyword/operator
     if (it != tokenizationMap.end())
     {
-        outputFile << it->second << "," << " ";
+        outputFile << it->second << ", ";
 
     }
     else //it is an identifier
     {
-        outputFile << "T_IDENTIFIER(\"" << bufferString << "\")," << " ";
+        outputFile << "T_IDENTIFIER(\"" << bufferString << "\"), ";
     }
 }
 
