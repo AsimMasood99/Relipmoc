@@ -1,80 +1,41 @@
 cmake_minimum_required(VERSION 3.16)
-
-# Project name and version
 project(Relipmoc VERSION 1.0.0 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Compiler flags for better debugging and warnings
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wpedantic")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-endif()
+# Add compile flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-# Set default build type to Debug if not specified
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
+# Include directories
+include_directories(include)
 
-# Include directories - using modern target-based approach
-set(RELIPMOC_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+# Find all source files
+file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-# Collect source files (implementation files only)
-file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
+# Remove main.cpp from library sources
+set(LIB_SOURCES ${SOURCES})
+list(REMOVE_ITEM LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
-# Separate main.cpp from library sources
-set(MAIN_SOURCE "")
-set(LIB_SOURCES "")
-
-foreach(source ${ALL_SOURCES})
-    get_filename_component(filename ${source} NAME)
-    if(filename STREQUAL "main.cpp")
-        set(MAIN_SOURCE ${source})
-    else()
-        list(APPEND LIB_SOURCES ${source})
-    endif()
-endforeach()
-
-# Collect header files for IDE organization
-file(GLOB_RECURSE HEADERS "include/relipmoc/*.hpp")
-
-# Create library if there are library sources
+# Create library if there are non-main source files
 if(LIB_SOURCES)
-    add_library(${PROJECT_NAME}_lib ${LIB_SOURCES} ${HEADERS})
-    target_include_directories(${PROJECT_NAME}_lib 
-        PUBLIC 
-            ${RELIPMOC_INCLUDE_DIR}
-    )
-endif()
-
-# Create executable
-if(MAIN_SOURCE)
-    add_executable(${PROJECT_NAME} ${MAIN_SOURCE})
-    target_include_directories(${PROJECT_NAME} 
-        PRIVATE 
-            ${RELIPMOC_INCLUDE_DIR}
-    )
+    add_library(${PROJECT_NAME}_lib STATIC ${LIB_SOURCES})
+    target_include_directories(${PROJECT_NAME}_lib PUBLIC include)
     
-    # Link library if it exists
-    if(LIB_SOURCES)
-        target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
-    endif()
+    # Create executable and link with library
+    add_executable(${PROJECT_NAME} src/main.cpp)
+    target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
 else()
-    # If no main.cpp, create executable with all sources
-    add_executable(${PROJECT_NAME} ${ALL_SOURCES} ${HEADERS})
-    target_include_directories(${PROJECT_NAME} 
-        PRIVATE 
-            ${RELIPMOC_INCLUDE_DIR}
-    )
+    # If only main.cpp exists, create executable directly
+    add_executable(${PROJECT_NAME} ${SOURCES})
 endif()
 
-# Optional: Enable testing
-option(BUILD_TESTS "Build test programs" OFF)
+target_include_directories(${PROJECT_NAME} PRIVATE include)
 
+# Testing support
+option(BUILD_TESTS "Build tests" OFF)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
@@ -83,6 +44,7 @@ endif()
 # Print build information
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
-message(STATUS "Include directory: ${RELIPMOC_INCLUDE_DIR}")
 message(STATUS "Source files: ${SOURCES}")
-message(STATUS "Header files: ${HEADERS}")
+if(LIB_SOURCES)
+    message(STATUS "Library sources: ${LIB_SOURCES}")
+endif()
