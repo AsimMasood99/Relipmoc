@@ -1,97 +1,97 @@
-# Relipmoc Lexer
+# Relipmoc
 
-A simple lexical analyzer (lexer) for a programming language, built as part of a compiler construction project.
+Not just your avarage compiler. 
 
-## Features
+## Language Syntax Support
 
-- Tokenizes source code into meaningful tokens
-- Supports various token types: numbers, strings, identifiers, keywords, operators, and delimiters
-- Tracks line and column numbers for error reporting
-- Extensible design for adding new token types
+- Function definitions (`fn`)
+- Control flow (`if`, `else`, `elif`, `while`, `for`)
+- Data types (`int`, `float`, `bool`, `string`)
+- Operators (arithmetic, comparison, logical, bitwise)
+- Comments (line comments with `#`)
+- String literals with escape sequences
 
 ## Build Instructions
 
 ### Prerequisites
-- CMake 3.16 or higher
+- CMake 3.5 or higher
 - C++17 compatible compiler (GCC, Clang, or MSVC)
 
 ### Building the Project
 
 ```bash
-# Create build directory
 mkdir build
 cd build
 
-# Configure the project
 cmake ..
 
-# Build the project
 make
 
-# Run the lexer
 ./Relipmoc
 ```
 
 ### Building with Tests
 
 ```bash
-# Configure with tests enabled
-cmake -DBUILD_TESTS=ON ..
-
-# Build everything including tests
-make
-
-# Run tests
-ctest
-# or run directly
-./tests/test_lexer
+TO BE DEFINED LATER.
 ```
 
 ## Project Structure
 
 ```
 relipmoc/
-├── CMakeLists.txt      # Main build configuration
-├── README.md          # This file
-├── src/               # Source files
-│   ├── main.cpp       # Main entry point
-│   ├── lexer.h        # Lexer class declaration
-│   ├── lexer.cpp      # Lexer implementation
-│   └── token.h        # Token definitions
-├── tests/             # Unit tests
-├── examples/          # Example input files
-└── build/             # Build artifacts
+├── CMakeLists.txt              # Main build configuration
+├── README.md                   # This file
+├── include/                    # Header files
+│   └── relipmoc/
+│       ├── lexer.hpp          # Lexer class declaration
+│       └── token.hpp          # Token definitions and enums
+├── src/                       # Source files
+│   ├── main.cpp              # Main entry point with demo
+│   ├── lexer.cpp             # Regex-based lexer implementation
+│   └── token.cpp             # Token utility functions
+├── tests/                     # Unit tests
+│   ├── CMakeLists.txt        # Test build configuration
+│   └── test_lexer.cpp        # Basic test cases
+├── examples/                  # Example input files
+│   └── sample.txt            # Sample code for testing
+└── build/                    # Build artifacts
 ```
 
 ## Usage
 
-The lexer can be used to tokenize source code:
-
-```cpp
-#include "lexer.h"
-
-std::string code = "int x = 42;";
-Lexer lexer(code);
-auto tokens = lexer.tokenize();
-
-for (const auto& token : tokens) {
-    std::cout << "Token: " << token.value << std::endl;
-}
-```
+See /src/main.cpp
 
 ## Supported Tokens
 
-- **Numbers**: Integer literals (e.g., `123`, `0`, `999`)
-- **Identifiers**: Variable names (e.g., `variable`, `myVar`)
-- **Keywords**: `if`, `else`, `while`, `for`, `return`
-- **Operators**: `+`, `-`, `*`, `/`, `=`, `==`, `!=`, `<`, `>`
-- **Delimiters**: `;`, `,`, `(`, `)`, `{`, `}`
-- **Strings**: String literals (e.g., `"hello"`)
+### Keywords
+- **Control Flow**: `if`, `else`, `elif`, `while`, `for`, `return`
+- **Functions**: `fn`, `print`
+- **Data Types**: `int`, `float`, `bool`, `string`
 
-## Contributing
+### Literals
+- **Integers**: `123`, `0`, `999`
+- **Floats**: `3.14`, `0.5`, `123.456`
+- **Strings**: `"hello"`, `"world with \"quotes\""`, `"escaped\\text"`
+- **Identifiers**: `variable`, `myVar`, `_private`, `count2`
 
-This is a learning project for compiler construction. Feel free to extend the lexer with additional features like:
-- More operators and keywords
-- Support for floating-point numbers
-- Comments handling
-- Error recovery mechanisms
+### Operators
+- **Arithmetic**: `+`, `-`, `*`, `/`
+- **Assignment**: `=`
+- **Comparison**: `==`, `!=`, `<`, `>`, `<=`, `>=`
+- **Logical**: `&&`, `||`, `!`
+- **Increment/Decrement**: `++`, `--`
+- **Bitwise**: `<<`, `>>` (can be added to regex)
+
+### Delimiters and Punctuation
+- **Parentheses**: `(`, `)`
+- **Brackets**: `[`, `]`
+- **Braces**: `{`, `}`
+- **Separators**: `;`, `,`, `.`
+
+### Special
+- **Comments**: `# This is a comment`
+- **Whitespace**: Spaces, tabs, newlines (automatically filtered)
+
+## TODO: 
+Define TODO list here. 
