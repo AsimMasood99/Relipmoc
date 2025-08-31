@@ -5,7 +5,8 @@
 
 
 //Other than below tokens T_indentifier("string")
-//T_CONST_NUM_VALUE(Value)
+//T_CONST_NUM_INT(Value)
+//T_CONST_NUM_FLOAT(Value)
 
 std::unordered_map<std::string, std::string> tokenizationMap = 
 {
@@ -21,7 +22,6 @@ std::unordered_map<std::string, std::string> tokenizationMap =
     //Data Types
     {"int", "T_INT"},
     {"float", "T_FLOAT"},
-    {"double", "T_DOUBLE"},
     {"char", "T_CHAR"},
     {"string", "T_STRING"},
     {"void", "T_VOID"},
@@ -63,9 +63,9 @@ std::unordered_map<std::string, std::string> tokenizationMap =
     //Misc
     {";", "T_SEMICOLON"},
     {",", "T_COMMA"},
+    {"\"", "T_DOUBLE_QUOTE"},
+    {"'", "T_SINGLE_QUOTE"}
 };
-
-
 
 //Utility Functions
 bool isDelim(const char& character)
@@ -73,7 +73,7 @@ bool isDelim(const char& character)
     return (character == ' ' || character == '\n');
 }
 
-bool isNum(const std::string& bufferString)
+bool isNum(const std::string& bufferString, bool& floatFlag)
 {
    
     bool hasDecimal = false;
@@ -109,23 +109,35 @@ bool isNum(const std::string& bufferString)
         }
     }
     
+    floatFlag = hasDecimal;
+
     return true;
 }
 
 
 //The Big One
+//TODO: Handle isString Flag
 void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream& outputFile, const bool isStringFlag)
 {
+    bool isFloatFlag = false;
+
     if (isStringFlag)
     {
         outputFile << "T_STRING(\"" << bufferString << "\")," << " ";
         return;
     }
 
-    //If is Num save token as T_CONST_NUM_VALUE
-    if (isNum(bufferString))
+    //If is Num save token as T_CONST_NUM_Type
+    if (isNum(bufferString, isFloatFlag))
     {
-        outputFile << "T_CONST_NUM_VALUE(" << bufferString << ")," << " ";
+        if (isFloatFlag)
+        {
+            outputFile << "T_CONST_NUM_FLOAT(" << bufferString << ")," << " ";
+        }
+        else
+        {
+            outputFile << "T_CONST_NUM_INT(" << bufferString << ")," << " ";
+        }
         return;
     }
     
@@ -144,6 +156,8 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
     }
 }
 
+
+// TODO: check for ==, <= double operators check
 void lex(const std::string& codeFile)
 {
     std::ifstream file(codeFile);
@@ -162,15 +176,78 @@ void lex(const std::string& codeFile)
 
     std::string currentBuffer;
     char currCharacter;
+    bool stringStarted = false;
+    bool escapeCharNext = false;
+
     while (file.get(currCharacter))
     {
-        if (isDelim(currCharacter));
+        if(stringStarted)
         {
-            //TODO: handle is string case
-            convertStringAndWriteToFile(currentBuffer, outputFile, false);
-            currentBuffer.clear();
+            //have seen escape character for the first time
+            if (currCharacter == '\\' && !escapeCharNext)
+            {
+                escapeCharNext = true;
+                currentBuffer+= currCharacter;
+                continue;
+            }
+
+            //Character was escaped
+            if (escapeCharNext)
+            {
+                currentBuffer += currCharacter;
+                escapeCharNext = false;
+                continue;
+            }
+
+            //Exiting String
+            if (currCharacter == '\"')
+            {
+                currentBuffer += currCharacter;
+                stringStarted = false;
+                convertStringAndWriteToFile(currentBuffer, outputFile, true);
+                currentBuffer.clear();
+                continue;
+            }
+
+            // Normal string characters
+            currentBuffer += currCharacter;
+        }
+        else // Normal Case
+        {
+            if(currCharacter == '\"')
+            {
+                if (!currentBuffer.empty()) //string starting so clear buffer
+                {
+                    convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                    currentBuffer.clear();
+                }
+                stringStarted = true;
+                currentBuffer += currCharacter;
+                continue;
+            }
+            else if (isDelim(currCharacter))
+            {
+                if(!currentBuffer.empty()) // if not multiple spaces
+                {
+                    convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                    currentBuffer.clear();
+                }
+            }
+            else
+            {
+                currentBuffer+= currCharacter;
+            }
         }
     }
 
+    //if buffer still left, TODO : remove this debug
+    if (!currentBuffer.empty())
+    {
+        std::cout<<"Buffer still left: "<<currentBuffer<<std::endl;
+        convertStringAndWriteToFile(currentBuffer, outputFile, false);
+        currentBuffer.clear();
+    }
+
     file.close();
+    outputFile.close();
 }
