@@ -113,6 +113,26 @@ bool isNum(const std::string& bufferString, bool& floatFlag)
 
     return true;
 }
+bool isInvalidIdentifier(const std::string& bufferString)
+{
+
+    if (isdigit(bufferString[0]))
+    {
+        std::cout<<bufferString<< " is an invalid identifier as it starts with a digit" <<std::endl;
+        return true;
+    }
+
+    for (char c : bufferString)
+    {
+        if (!isalnum(c) && c != '_')
+        {
+            std::cout<<bufferString<< " is an invalid identifier as it contains invalid characters" <<std::endl;
+            return true;
+        }
+    }
+
+    return false;
+}
 
 
 //The Big One
@@ -152,7 +172,11 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
     }
     else //it is an identifier
     {
-        outputFile << "T_IDENTIFIER(\"" << bufferString << "\"), ";
+        if(isInvalidIdentifier(bufferString))
+        {
+            std::cerr << "Error: Invalid identifier encountered: " << bufferString << std::endl;
+            return;
+        }
     }
 }
 
