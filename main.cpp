@@ -82,25 +82,28 @@ vector<Token> lex(const string& code) {
         if (string_lit) {
             size_t _idx = curr;
             while (_idx < trimmed_code.length()) {
-                if (trimmed_code[_idx] == '"') {
-                    size_t backslash_count = 0;
-                    size_t check_pos = _idx;
-                    while (check_pos > curr && trimmed_code[check_pos - 1] == '\\') {
-                        backslash_count++;
-                        check_pos--;
-                    }
-                    // Not escaped when backslash count is even
-                    if (backslash_count % 2 == 0) {
-                        idx = _idx;
+                size_t quotePos = trimmed_code.find('"', _idx);
+
+                if (quotePos == std::string::npos) {
+                    throw std::runtime_error("Unclosed string literal");
+                }
+
+                // Check for escaped double quotes
+                size_t backslashCount = 0;
+                for (size_t checkPos = quotePos - 1; checkPos >= _idx; --checkPos) {
+                    if (trimmed_code[checkPos] == '\\') {
+                        backslashCount++;
+                    } else {
                         break;
                     }
-                    _idx++;
-                } else {
-                    throw runtime_error("Unclosed string literal");
                 }
-            }
-            if (idx == string::npos) {
-                throw runtime_error("Unclosed string literal");
+
+                if (backslashCount % 2 == 0) {
+                    idx = quotePos;
+                    break;
+                } else {
+                    _idx = quotePos + 1; // Move past the escaped quote and continue searching
+                }
             }
         } else {
             size_t found = string::npos;
@@ -270,20 +273,55 @@ void print_tokens(const vector<Token>& tokens) {
         const Token& token = tokens[i];
         switch (token.type) {
             case TokenType::T_FUNCTION: cout << "T_FUNCTION"; break;
-            case TokenType::T_INT: cout << "T_INT"; break;
+            case TokenType::T_IF: cout << "T_IF"; break;
+            case TokenType::T_ELSE: cout << "T_ELSE"; break;
+            case TokenType::T_ELSE_IF: cout << "T_ELSE_IF"; break;
+            case TokenType::T_WHILE: cout << "T_WHILE"; break;
+            case TokenType::T_FOR: cout << "T_FOR"; break;
+            case TokenType::T_RETURN: cout << "T_RETURN"; break;
+            case TokenType::T_PRINT: cout << "T_PRINT"; break;
+
             case TokenType::T_IDENTIFIER: cout << "T_IDENTIFIER(\"" << token.value << "\")"; break;
             case TokenType::T_STRINGLIT: cout << "T_STRINGLIT(\"" << token.value << "\")"; break;
             case TokenType::T_CONST_INT: cout << "T_CONST_INT(" << token.value << ")"; break;
             case TokenType::T_CONST_FLOAT: cout << "T_CONST_FLOAT(" << token.value << ")"; break;
             case TokenType::T_CONST_BOOL: cout << "T_CONST_BOOL(" << (token.value == "true" ? "true" : "false") << ")"; break;
+
             case TokenType::T_ROUND_BRACKET_OPEN: cout << "T_ROUND_BRACKET_OPEN"; break;
             case TokenType::T_ROUND_BRACKET_CLOSE: cout << "T_ROUND_BRACKET_CLOSE"; break;
+            case TokenType::T_SQUARE_BRACKET_OPEN: cout << "T_SQUARE_BRACKET_OPEN"; break;
+            case TokenType::T_SQUARE_BRACKET_CLOSE: cout << "T_SQUARE_BRACKET_CLOSE"; break;
+            case TokenType::T_CURLY_BRACKET_OPEN: cout << "T_CURLY_BRACKET_OPEN"; break;
+            case TokenType::T_CURLY_BRACKET_CLOSE: cout << "T_CURLY_BRACKET_CLOSE"; break;
+
             case TokenType::T_COMMA: cout << "T_COMMA"; break;
             case TokenType::T_SEMICOLON: cout << "T_SEMICOLON"; break;
+            case TokenType::T_DOUBLE_QUOTE: cout << "T_DOUBLE_QUOTE"; break;
+
             case TokenType::T_ASSIGNMENT_OPR: cout << "T_ASSIGNMENT_OPR"; break;
             case TokenType::T_EQUALS_OPR: cout << "T_EQUALS_OPR"; break;
-            // Add other cases as needed
-            default: cout << "UNKNOWN"; break;
+            case TokenType::T_NOT: cout << "T_NOT"; break;
+            case TokenType::T_NOT_EQUALS_OPR: cout << "T_NOT_EQUALS_OPR"; break;
+            case TokenType::T_LESS_THAN_OPR: cout << "T_LESS_THAN_OPR"; break;
+            case TokenType::T_GREATER_THAN_OPR: cout << "T_GREATER_THAN_OPR"; break;
+            case TokenType::T_LESS_THAN_EQUAL_TO_OPR: cout << "T_LESS_THAN_EQUAL_TO_OPR"; break;
+            case TokenType::T_GREATER_THAN_EQUAL_TO_OPR: cout << "T_GREATER_THAN_EQUAL_TO_OPR"; break;
+            case TokenType::T_AND_OPR: cout << "T_AND_OPR"; break;
+            case TokenType::T_OR_OPR: cout << "T_OR_OPR"; break;
+            case TokenType::T_RIGHT_SHIFT_OPR: cout << "T_RIGHT_SHIFT_OPR"; break;
+            case TokenType::T_LEFT_SHIFT_OPR: cout << "T_LEFT_SHIFT_OPR"; break;
+
+            case TokenType::T_PLUS_OPR: cout << "T_PLUS_OPR"; break;
+            case TokenType::T_MINUS_OPR: cout << "T_MINUS_OPR"; break;
+            case TokenType::T_MULTIPLY_OPR: cout << "T_MULTIPLY_OPR"; break;
+            case TokenType::T_DIVIDE_OPR: cout << "T_DIVIDE_OPR"; break;
+
+            case TokenType::T_INT: cout << "T_INT"; break;
+            case TokenType::T_FLOAT: cout << "T_FLOAT"; break;
+            case TokenType::T_BOOL: cout << "T_BOOL"; break;
+            case TokenType::T_STRING: cout << "T_STRING"; break;
+
+            default: throw runtime_error("Unknown token to print\n");
         }
         if (i < tokens.size() - 1) {
             cout << ", ";
