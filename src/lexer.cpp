@@ -5,6 +5,9 @@ Lexer::Lexer(const std::string &src) : source(src) {
         {"Keyword",
          std::regex(
              R"(\b(fn|if|else|elif|while|for|return|print|int|float|bool|string)\b)")},
+        {"InvalidIdentifier",
+         std::regex(
+             R"([0-9]+[a-zA-Z_][a-zA-Z0-9_]*)")},
         {"Identifier", std::regex(R"([a-zA-Z_][a-zA-Z0-9_]*)")},
         {"Float", std::regex(R"([0-9]+\.[0-9]+)")},
         {"Number", std::regex(R"([0-9]+)")},
@@ -67,25 +70,33 @@ std::vector<Token> Lexer::tokenize() {
 
         for (const auto &pattern : token_patterns) {
             std::smatch match;
-            
-            if (std::regex_search(start, end, match, pattern.second, std::regex_constants::match_continuous)) {
-                
-                if(pattern.first == "Whitespace" || pattern.first == "Comment") {
-                    // Not tokenizing whitespace. 
+
+            if (std::regex_search(start, end, match, pattern.second,
+                                  std::regex_constants::match_continuous)) {
+
+                if (pattern.first == "Whitespace" ||
+                    pattern.first == "Comment") {
+                    // Not tokenizing whitespace.
                     start = match[0].second; // advance iterator after the match
                     matched = true;
                     break;
                 }
-                else if(pattern.first == "Keyword") {
+                else if(pattern.first == "InvalidIdentifier") {
+                    std::string invalid_id = match.str();
+                    std::cerr << "Lexical Error: Invalid identifier '" << invalid_id 
+                              << "' - identifiers cannot start with a digit" << std::endl;
+                    throw std::runtime_error("Lexical Error: Invalid identifier '" + invalid_id + "' - identifiers cannot start with a digit");
+                } 
+                else if (pattern.first == "Keyword") {
                     std::string keyword = match.str();
                     if (keyword_map.find(keyword) != keyword_map.end()) {
-                        tokens.push_back(Token{keyword_map[keyword]}); // Fixed: was operator_map
+                        tokens.push_back(Token{
+                            keyword_map[keyword]}); // Fixed: was operator_map
                     }
                     start = match[0].second; // Added: advance iterator
                     matched = true;
                     break;
-                }
-                else if(pattern.first == "Operator") {
+                } else if (pattern.first == "Operator") {
                     std::string op = match.str();
                     if (operator_map.find(op) != operator_map.end()) {
                         tokens.push_back(Token{operator_map[op]});
@@ -93,32 +104,34 @@ std::vector<Token> Lexer::tokenize() {
                     start = match[0].second; // Added: advance iterator
                     matched = true;
                     break;
-                }
-                else if(pattern.first == "Identifier") {
-                    tokens.push_back(Token{TokenType::T_IDENTIFIER, match.str()});
+                } else if (pattern.first == "Identifier") {
+                    tokens.push_back(
+                        Token{TokenType::T_IDENTIFIER, match.str()});
                     start = match[0].second; // Added: advance iterator
                     matched = true;
                     break;
-                }
-                else if(pattern.first == "Number") {
-                    tokens.push_back(Token{TokenType::T_CONST_INT, match.str()});
+                    // throw std::runtime_error("Lexical Error: Invalid
+                    // identifier '" + invalid_id + "' - identifiers cannot
+                    // start with a digit");
+                } else if (pattern.first == "Number") {
+                    tokens.push_back(
+                        Token{TokenType::T_CONST_INT, match.str()});
                     start = match[0].second; // Added: advance iterator
                     matched = true;
                     break;
-                }
-                else if(pattern.first == "Float") {
-                    tokens.push_back(Token{TokenType::T_CONST_FLOAT, match.str()});
+                } else if (pattern.first == "Float") {
+                    tokens.push_back(
+                        Token{TokenType::T_CONST_FLOAT, match.str()});
                     start = match[0].second; // Added: advance iterator
                     matched = true;
                     break;
-                }
-                else if(pattern.first == "String") {
-                    tokens.push_back(Token{TokenType::T_STRINGLIT, match.str()});
+                } else if (pattern.first == "String") {
+                    tokens.push_back(
+                        Token{TokenType::T_STRINGLIT, match.str()});
                     start = match[0].second; // Added: advance iterator
                     matched = true;
                     break;
-                }
-                else if(pattern.first == "Separators") {
+                } else if (pattern.first == "Separators") {
                     std::string sep = match.str();
                     if (operator_map.find(sep) != operator_map.end()) {
                         tokens.push_back(Token{operator_map[sep]});
