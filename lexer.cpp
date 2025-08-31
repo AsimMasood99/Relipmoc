@@ -271,6 +271,18 @@ void lex(const std::string& codeFile)
         }
         else // Normal Case
         {
+            if(currCharacter == '#') //is comment
+            {
+                if(!currentBuffer.empty()) //tokenize anything that is before
+                {
+                    convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                    currentBuffer.clear();
+                }
+                // Skip the rest of the line
+                std::string temp;
+                std::getline(file, temp);
+                continue;
+            }
             //Operators case
             if(isBracket(currCharacter))
             {
