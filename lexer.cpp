@@ -206,11 +206,14 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
             std::cerr << "Error: Invalid identifier encountered: " << bufferString << std::endl;
             return;
         }
+        else
+        {
+            outputFile << "T_IDENTIFIER(\"" << bufferString << "\"), ";
+        }
     }
 }
 
 
-// TODO: check for ==, <= double operators check
 void lex(const std::string& codeFile)
 {
     std::ifstream file(codeFile);
@@ -226,6 +229,7 @@ void lex(const std::string& codeFile)
         std::cerr << "Error: Could not open output file." << std::endl;
         return;
     }
+    outputFile << "[ ";
 
     std::string currentBuffer;
     char currCharacter;
@@ -341,6 +345,10 @@ void lex(const std::string& codeFile)
         convertStringAndWriteToFile(currentBuffer, outputFile, false);
         currentBuffer.clear();
     }
+
+    // Remove the last 2 characters (", ") from the output file
+    outputFile.seekp(-2, std::ios_base::end);
+    outputFile << " ]";
 
     file.close();
     outputFile.close();
