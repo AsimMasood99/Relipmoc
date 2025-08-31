@@ -79,7 +79,7 @@ std::vector<Token> Lexer::tokenize() {
                 else if(pattern.first == "Keyword") {
                     std::string keyword = match.str();
                     if (keyword_map.find(keyword) != keyword_map.end()) {
-                        tokens.push_back(Token{keyword_map[keyword], keyword}); // Fixed: was operator_map
+                        tokens.push_back(Token{keyword_map[keyword]}); // Fixed: was operator_map
                     }
                     start = match[0].second; // Added: advance iterator
                     matched = true;
@@ -88,7 +88,7 @@ std::vector<Token> Lexer::tokenize() {
                 else if(pattern.first == "Operator") {
                     std::string op = match.str();
                     if (operator_map.find(op) != operator_map.end()) {
-                        tokens.push_back(Token{operator_map[op], op});
+                        tokens.push_back(Token{operator_map[op]});
                     }
                     start = match[0].second; // Added: advance iterator
                     matched = true;
@@ -121,7 +121,7 @@ std::vector<Token> Lexer::tokenize() {
                 else if(pattern.first == "Separators") {
                     std::string sep = match.str();
                     if (operator_map.find(sep) != operator_map.end()) {
-                        tokens.push_back(Token{operator_map[sep], sep});
+                        tokens.push_back(Token{operator_map[sep]});
                     }
                     start = match[0].second; // Added: advance iterator
                     matched = true;

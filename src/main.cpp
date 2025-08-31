@@ -18,9 +18,9 @@ int main() {
     // std::cout << code;
     Lexer lexer(code);
     tokens = lexer.tokenize();
-
+    
     for (const auto& token : tokens) {
-        std::cout << token << std::endl;
+        std::cout << token << ",";
     }
 
     return 0;

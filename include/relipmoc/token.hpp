@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <optional>
+#include <iostream>
 
 enum class TokenType {
     // Keywords
@@ -66,9 +68,17 @@ enum class TokenType {
 class Token {
   public:
     TokenType type;
-    std::string value;
+    std::optional<std::string> value;
 
-    Token(TokenType type, const std::string value) : type(type), value(value) {}
+    Token(TokenType type, const std::optional<std::string>& value = std::nullopt) 
+        : type(type), value(value) {}
+    
+    Token(TokenType type, const std::string& val) 
+        : type(type), value(val) {}
+
+    bool hasValue() const;
+    std::string getValue() const;
+
     friend std::ostream &operator<<(std::ostream &os, const Token &token);
 };
 

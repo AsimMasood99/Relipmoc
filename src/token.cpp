@@ -63,7 +63,13 @@ std::string tokenTypeToString(TokenType type) {
     }
 }
 
+bool Token::hasValue() const { return value.has_value(); }
+std::string Token::getValue() const { return value.value_or(""); }
+
 std::ostream& operator<<(std::ostream& os, const Token& token) {
-    os << "<" << tokenTypeToString(token.type) << ", \"" << token.value << "\">";
+    os << tokenTypeToString(token.type);
+    if (token.hasValue()) {
+        os << "(\"" << token.getValue() << "\")";
+    }
     return os;
 }
