@@ -27,6 +27,8 @@ std::unordered_map<std::string, std::string> tokenizationMap =
     {"void", "T_VOID"},
     {"bool", "T_BOOL"},
     {"null", "T_NULL"},
+    {"true", "T_TRUE"},
+    {"false", "T_FALSE"},
     //Function
     {"fn", "T_FUNC"},
     {"return", "T_RETURN"},
@@ -140,6 +142,11 @@ bool isOperator(const char& character)
     std::string operators = "+-*/%<>=!&|^~";
     return operators.find(character) != std::string::npos;
 }
+bool isBracket(const char& character)
+{
+    std::string brackets = "(){[]};,\'"; //added semicolon case as well
+    return brackets.find(character) != std::string::npos;
+}
 bool isDoubleOperator(const char& firstChar, const char& secondChar)
 {
     std::string doubleOperators[] = {"<=", ">=", "==", "!=", "&&", "||", "++", "--", "<<", ">>"};
@@ -165,7 +172,7 @@ void convertStringAndWriteToFile(const std::string& bufferString, std::ofstream&
 
     if (isStringFlag)
     {
-        outputFile <<tokenizationMap["\""] <<", "<< "T_STRING(\"" << bufferString << "\"), " << tokenizationMap["\""] <<", ";
+        outputFile <<tokenizationMap["\""] <<", "<< "T_STRINGINIT(" << bufferString << "), " << tokenizationMap["\""] <<", ";
         return;
     }
 
@@ -261,8 +268,26 @@ void lex(const std::string& codeFile)
         else // Normal Case
         {
             //Operators case
-            if(isOperator(currCharacter) && currentBuffer.empty()) //just read a new operator from start
+            if(isBracket(currCharacter))
             {
+                if(!currentBuffer.empty())
+                {
+                    convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                    currentBuffer.clear();
+                }
+                currentBuffer += currCharacter;
+                convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                currentBuffer.clear();
+                continue;
+            }
+
+            if(isOperator(currCharacter))
+            {
+                if(!currentBuffer.empty())
+                {
+                    convertStringAndWriteToFile(currentBuffer, outputFile, false);
+                    currentBuffer.clear();
+                }
                 currentBuffer += currCharacter;
                 //PEAK NEXT TO SEE IF TWO OPERATOR ONE
                 char nextCharacter = file.peek();
@@ -319,4 +344,9 @@ void lex(const std::string& codeFile)
 
     file.close();
     outputFile.close();
+}
+
+int main()
+{
+    lex("input.cpp");
 }
