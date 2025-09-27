@@ -207,6 +207,13 @@ pub enum multiplication_expression{
     )
 }
 
+# [derive(Debug, Clone)]
+pub enum multiplication_operator {
+    Multiply,  // *
+    Divide,    // /
+    Modulo,    // %
+}
+
 # [derive(Debug)]
 pub enum Exp_expression{
     unary(unary_expression),
@@ -217,13 +224,21 @@ pub enum Exp_expression{
     )
 }
 
-#[derive(Debug)]
+
+# [derive(Debug)]
 pub enum unary_expression{
     primary(primary_expression),
     UnaryOp(
         unary_operator, // !,~,++,--,+,-   (terminal in lexer)
         Box<unary_expression> // recursive to allow chaining of unary operations
     )
+}
+
+
+# [derive(Debug, Clone)]
+pub enum unary_operator {
+    Minus,  // -
+    Not,    // !
 }
 
 

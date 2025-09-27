@@ -51,8 +51,8 @@
 **add-expression**             -> mul-expression | add-expression add-op mul-expression<br>
 **add-op**               -> T_PLUS_OPR | T_MINUS_OPR
 
-**mul-expression**             -> exp-expression | mul-expression mul-op exp-expression<br>
-**mul-op**               -> T_MULTIPLY_OPR | T_DIVIDE_OPR
+**mul-expression** -> unary-expression | mul-expression mul-op unary-expression<br>
+**mul-op**               -> T_MULTIPLY_OPR | T_DIVIDE_OPR | T_MODULO_OPR
 
 **exp-expression**             -> unary-expression | unary-expression T_MULTIPLY_OPR exp-expression
 
