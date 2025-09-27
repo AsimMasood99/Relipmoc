@@ -29,9 +29,9 @@
 
 **return-statement**             -> T_RETURN expression-statement
 
-**break-statment**           -> T_BREAK
+**break-statement**           -> T_BREAK
 
-**expression-statment**            -> assign-expression T_SEMICOLON | T_SEMICOLON<br>
+**expression-statement**            -> assign-expression T_SEMICOLON | T_SEMICOLON<br>
 
 **assign-expression**          -> bool-expression | bool-expression T_ASSIGNMENT_OPR assign-expression
 

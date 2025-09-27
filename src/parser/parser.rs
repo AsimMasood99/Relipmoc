@@ -81,7 +81,9 @@ fn params_parser<'a>(parser: &mut Parser<'a>) -> Result<FunctionDeclaration, Err
 
 fn block_parser<'a>(parser: &mut Parser<'a>) -> Result<FunctionDeclaration, Errors>{
 
-    
+    loop{
+        
+    }
 
 }
 
@@ -120,10 +122,181 @@ fn function_declaration<'a>(parser: &mut Parser<'a>, &mut ) -> Result<FunctionDe
     // now curly braces open
     parser.peek_next_with_caution(Token:T_CURLY_BRACKET_OPEN)
 
-    // now we will go into the block
-
+    // TODO: now we will go into the block
+    
 }
 
+
+// variable decleration parser
+fn variable_declaration_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors>
+{   let var = variable_declaration{};
+    
+    let var_type = match parser.consume()? {
+            Token::T_INT => Type::Int,
+            Token::T_STRING => Type::String,
+            Token::T_FLOAT => Type::Float,
+            Token::T_BOOL => Type::Bool,
+            other => return Err(Errors::ExpectedTypeToken(other.clone())),
+        }
+        
+    // 2nd checking the identifier 
+    let var_identifier = match parser.consume()?{
+        Token::T_IDENTIFIER(name) => name.clone(), // matching and if it matched copy (clone) the name
+        other => return Err(Errors::ExpectedIdentifier(other.clone())) // no match: send error
+    }
+    
+    // 3rd is equal sign
+    // params.peek_next_with_caution(Token::T_EQUALS_OPR)
+    
+    // 3rd is the equal sign
+    // 4th is the expression (number that is being assigned)
+    // +++++  (The expression will handle the equal sign and the number) ++++++
+    // TODO: add expression-statement here (for the number)
+
+    // 3rd now we are adding this parameter to the
+    ok (var{
+        type_token: var_type,
+        identifier: var_identifier,
+        expression: // TODO: returned expression will be added here
+    })
+}
+
+// for statement parser
+fn for_loop_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
+    // for loop is detected (for token has been read)
+    parser.position += 1; // move to next token
+
+
+    // 1st we will be expecting an open round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN)
+
+    // 2nd we are expeting the loop variable decleration
+    let init_loop_variable = if parser.peek_curr() == Some(Token::T_SEMICOLON)
+    {
+        // this means there is no variable to initialize
+        None;
+    }
+    else{   
+        let returned_loop_var = variable_declaration_parser(&mut parser)?;
+        Some(returned_loop_var)
+    }
+
+    // 3rd we are expecting a semi-colon
+    parser.peek_next_with_caution(Token::T_SEMICOLON)
+
+    // 4th we are expecting the loop condition (expression statement)
+    let loop_condition = expression_statement_parser(&mut parser)?; // TODO: write this function
+
+    // 5th we are expecting a semi-colon
+    parser.peek_next_with_caution(Token::T_SEMICOLON)
+
+    // 6th we are expecting the update loop variable (expression)
+    let update_loop_var = if parser.peek_curr() == Some(Token::T_ROUND_BRACKET_CLOSE)
+    {
+        // this means there is no variable to initialize
+        None
+    }
+    else{   
+        let returned_expr = expression_parser(&mut parser)?; // TODO: write this function
+        Some(returned_expr) 
+    }
+
+    // 7th we are expecting a closing round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE) 
+
+    // 8th we are expecting a block (curly braces and statements inside it)
+    let block = block_parser(&mut parser)?; // TODO: write this function
+
+    Ok(Root::ForLoop {
+        init_variable: init_loop_variable,
+        condition: loop_condition,
+        update: update_loop_var,
+        body: block,
+    })
+}
+
+
+// helper of if statement parser
+fn if_statement_expression<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
+
+    let if_expr = if_statement_expression{};
+
+    // first token should be T_IF which we already checked before calling this function
+    // parser.position += 1; // move to next token
+
+    // 1st we are expecting an open round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN)
+
+    // 2nd we are expecting the condition expression
+    let condition = expression_statement_parser(&mut parser)?; // TODO: write this function
+
+    // 3rd we are expecting a closing round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE)
+
+    // 4th we are expecting a block (curly braces and statements inside it)
+    let block = block_parser(&mut parser)?; // TODO: write this function
+
+    Ok(if_statement_expression{
+        condition,
+        block,
+    })
+}
+
+
+// helper of if statement parser
+fn elif_statement<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
+    let mut elif_statements: Vec<elif_statement> = Vec::new();
+    //++++++++++++++++++ TODO: complete this function (its confusing) ++++++++++++++
+
+
+// if statement parser
+fn if_statement_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
+    // first token should be T_IF which we already checked before calling this function
+    parser.position += 1; // move to next token
+
+
+    let if_expr = if_statement_expression(&mut parser)?;
+
+    // 2nd is the elif statements (zero or more)
+    let mut elif_statements = elif_statement(&mut parser)?;
+
+    // 3rd is the else statement (optional)
+    let else_statement = if parser.peek_curr() == Some(Token::T_ELSE)
+    {
+        parser.position += 1; // move to next token
+        Some(block_parser(&mut parser)?) // parsing the block after else
+    }
+    else{
+        None
+    }
+
+    Ok(Root::IfStatement {
+        if_expression: if_expr,
+        elif_expressions: elif_statements,
+        else_expression: else_statement,
+    })
+}
+
+fn return_statement_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
+    // we have read the return token already and moving to next token
+    parser.position += 1;
+
+    // now we are expecting an expression statement
+    let expr = expression_statement_parser(&mut parser)?; // TODO: write this function
+
+    Ok(Root::ReturnStatement {
+        expr,
+    })
+}
+
+fn break_statement_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
+    // we have read the break token already and moving to next token
+    parser.position += 1;
+
+    Ok(Root::BreakStatement)
+
+    // no need to check for semi-colon as it is not required after break
+}
 
 // entry point of parser
 fn parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
