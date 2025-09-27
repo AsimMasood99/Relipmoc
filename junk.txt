@@ -1,0 +1,58 @@
+
+// impl Parser<'a> {
+
+//     // creating an instance of parser to see 
+//     fn initialize(stream: &'a Vec<Token>) -> Self {
+//         Parser {
+//             position: 0,
+//             stream,
+//         }
+//     }
+
+//     fn peak_cur_token(&self) -> Option<&Token> {
+//         self.stream.get(self.position)
+//     }
+
+//     // main entry point for parsing
+//     fn parse(&mut self) -> Result<Vec<root>, Errors> {
+//         let mut roots: Vec<root> = Vec::new(); // this will be our AST vector
+
+//         while self.position < self.stream.len() { // going through the whole stream of tokens
+//             let current_token = self.peek_cur_token().unwrap(); // getting the current token without consuming it
+
+//             match current_token {
+//                 Token::Type(_) => {
+//                     // could be variable declaration or function statement
+//                     if self.peek_next_is_identifier() {
+//                         if self.peek_next_next_is_left_paren() {
+//                             // function statement
+//                             let func_stmt = self.parse_function_statement()?;
+//                             roots.push(root::Func(func_stmt));
+//                         }
+//                         else if self.peek_next_next_is_equal_sign() {
+//                             // variable declaration
+//                             let var_decl = self.parse_variable_declaration()?;
+//                             roots.push(root::Var(var_decl));
+//                         }
+//                         else if self.peek_next_next_is_semicolon() {
+//                             // variable declaration without initialization
+//                             let var_decl = self.parse_variable_declaration_without_init()?;
+//                             roots.push(root::Var(var_decl));
+//                         }
+//                         else {
+//                             return Err(Errors::UnexpectedToken(format!("Unexpected token after identifier: {:?}", self.stream.get(self.position + 2))));
+//                         }
+//                     }
+//                     else {
+//                         return Err(Errors::UnexpectedToken(format!("Unexpected token after type: {:?}", current_token)));
+//                     }
+//                 }
+//                 _ => {
+//                     return Err(Errors::UnexpectedToken(format!("Unexpected token at root level: {:?}", current_token)));
+//                 }
+//             }
+//         }
+
+//         Ok(roots)
+//     }
+// }
