@@ -16,6 +16,12 @@ pub struct VariableDeclaration{ // for declaration of variables
 }
 
 #[derive(Debug)]
+pub struct AssignmentStatement{
+    pub identifier: String,
+    pub expression: Expression,
+}
+
+#[derive(Debug)]
 pub enum Expression{
     Literal(Constants),
     Identifier(String),
@@ -66,6 +72,7 @@ pub enum Statement{
     If(IfStatement),
     // While(WhileStatement),
     For(ForStatement),
+    Assignment(AssignmentStatement),
     // Function(FunctionStatement),
 }
 
@@ -87,6 +94,6 @@ pub struct ElifBlock{
 pub struct ForStatement {
     pub init_var: Option<VariableDeclaration>,
     pub condition: Option<Expression>,
-    pub update: Option<Expression>,
+    pub update: Option<AssignmentStatement>,
     pub block: Block,
 }

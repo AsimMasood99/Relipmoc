@@ -27,10 +27,7 @@ fn my_fn(int x, float y) {
     bool my_bool = lol == 40;
     int my_int = lol + (x*5 - (lol+2));
     int other_int = a * b^2 + c / d - 4;
-
-    for(int n = 10; n < 10; n = n + 1) {
-        n = 0;
-    }
+    for(int n = 0; n == 10;n = n + 1;) {}
 }
 
 

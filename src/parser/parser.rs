@@ -321,6 +321,24 @@ fn parse_variable_declaration(tokens: &mut TokenIterator) -> Result<VariableDecl
     })
 }
 
+fn parse_assignment_statement(tokens: &mut TokenIterator) -> Result<AssignmentStatement, Errors> {
+    let var_identifier = match tokens.consume()? {
+        Token::T_IDENTIFIER(name) => name.clone(), 
+        other => return Err(Errors::ExpectedIdentifier(other.clone())) 
+    };
+
+    tokens.seek_if(Token::T_ASSIGNMENT_OPR)?;
+
+    let expression = parse_expression(tokens)?;
+
+    tokens.seek_if(Token::T_SEMICOLON)?;
+
+    Ok(AssignmentStatement {
+        identifier: var_identifier,
+        expression: expression,
+    })
+}
+
 fn parse_parameter(tokens: &mut TokenIterator) -> Result<Parameter, Errors> {
 
     let param_type = match tokens.consume()? {
@@ -446,6 +464,10 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
             Token::T_FOR => {
                 let for_stmt = parse_for_statement(tokens)?;
                 statements.push(Statement::For(for_stmt));
+            }
+            Token::T_IDENTIFIER(_) => {
+                let assign_stmt = parse_assignment_statement(tokens)?;
+                statements.push(Statement::Assignment(assign_stmt));
             }
             // TODO: handle other statements like if, while, return, etc.
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
@@ -574,12 +596,17 @@ fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Error
     let update = if let Some(Token::T_ROUND_BRACKET_CLOSE) = tokens.peek_curr() {
         None //no update. 
     } else {
-        Some(parse_expression(tokens)?)
+        Some(parse_assignment_statement(tokens)?)
     };
     
     tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
     
+    tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+    
     let block = parse_block(tokens)?;
+    
+    // Parse block closing
+    tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
     
     Ok(ForStatement {
         init_var,
