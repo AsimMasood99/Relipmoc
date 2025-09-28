@@ -1,4 +1,5 @@
-include! ("../AST/enums.rs")
+use super::lexer::tokens::Token::{self, *};
+use super::parser::enums::{*};
 
 #[derive(Debug)]
 pub enum Errors{
@@ -45,14 +46,14 @@ fn params_parser<'a>(parser: &mut Parser<'a>) -> Result<FunctionDeclaration, Err
             Token::T_FLOAT => Type::Float,
             Token::T_BOOL => Type::Bool,
             other => return Err(Errors::ExpectedTypeToken(other.clone())),
-        }
+        };
         
         
         // 2nd checking the identifier 
         let param_identifier = match parser.consume()?{
             Token::T_IDENTIFIER(name) => name.clone(), // matching and if it matched copy (clone) the name
             other => return Err(Errors::ExpectedIdentifier(other.clone())) // no match: send error
-        }
+        };
         
         // TODO: will we be including an equal sign?
 
@@ -161,9 +162,9 @@ fn unary_expression_parser<'a>(parser: &mut Parser<'a>) -> Result<unary_expressi
     }
 }
 
-fn function_declaration<'a>(parser: &mut Parser<'a>, &mut ) -> Result<FunctionDeclaration, Errors> {
+fn function_declaration<'a>(parser: &mut Parser<'a>) -> Result<FunctionDeclaration, Errors> {
     
-    let new_Function = function_statement{}
+    let new_Function = function_statement{};
 
     // first token should be T_FUNCTION which we already checked before calling this function
     parser.position += 1; // move to next token
@@ -176,7 +177,7 @@ fn function_declaration<'a>(parser: &mut Parser<'a>, &mut ) -> Result<FunctionDe
             Token::T_BOOL => Type::Bool,
             // TODO: Add void return type here 
             other => return Err(Errors::ExpectedTypeToken(other.clone())),
-    }
+    };
 
     // 2nd will be the function identifier (my_function, etc)
     let identifier = match parser.consume()? {
@@ -185,16 +186,16 @@ fn function_declaration<'a>(parser: &mut Parser<'a>, &mut ) -> Result<FunctionDe
     };
 
     // 3rd will be the check for round bracket open (else give error)
-    parser.peek_next_with_caution(Token:T_ROUND_BRACKET_OPEN)
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN);
     
     // 4th will be the parameters fow which we have a dedicated function
     let all_parames = params_parser(&mut parser)?;
 
     // 5th now we will see a closed round braces
-    parser.peek_next_with_caution(Token:T_ROUND_BRACKET_CLOSE)
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE);
     
     // now curly braces open
-    parser.peek_next_with_caution(Token:T_CURLY_BRACKET_OPEN)
+    parser.peek_next_with_caution(Token::T_CURLY_BRACKET_OPEN);
 
     // TODO: now we will go into the block
     
@@ -206,18 +207,18 @@ fn variable_declaration_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, 
 {   let var = variable_declaration{};
     
     let var_type = match parser.consume()? {
-            Token::T_INT => Type::Int,
-            Token::T_STRING => Type::String,
-            Token::T_FLOAT => Type::Float,
-            Token::T_BOOL => Type::Bool,
-            other => return Err(Errors::ExpectedTypeToken(other.clone())),
-        }
+        Token::T_INT => Type::Int,
+        Token::T_STRING => Type::String,
+        Token::T_FLOAT => Type::Float,
+        Token::T_BOOL => Type::Bool,
+        other => return Err(Errors::ExpectedTypeToken(other.clone())),
+    };
         
     // 2nd checking the identifier 
     let var_identifier = match parser.consume()?{
         Token::T_IDENTIFIER(name) => name.clone(), // matching and if it matched copy (clone) the name
         other => return Err(Errors::ExpectedIdentifier(other.clone())) // no match: send error
-    }
+    };
     
     // 3rd is equal sign
     // params.peek_next_with_caution(Token::T_EQUALS_OPR)
@@ -228,7 +229,7 @@ fn variable_declaration_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, 
     // TODO: add expression-statement here (for the number)
 
     // 3rd now we are adding this parameter to the
-    ok (var{
+    Ok(variable_declaration {
         type_token: var_type,
         identifier: var_identifier,
         expression: // TODO: returned expression will be added here
@@ -242,7 +243,7 @@ fn for_loop_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
 
 
     // 1st we will be expecting an open round braces
-    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN)
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN);
 
     // 2nd we are expeting the loop variable decleration
     let init_loop_variable = if parser.peek_curr() == Some(Token::T_SEMICOLON)
@@ -253,16 +254,16 @@ fn for_loop_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
     else{   
         let returned_loop_var = variable_declaration_parser(&mut parser)?;
         Some(returned_loop_var)
-    }
+    };
 
     // 3rd we are expecting a semi-colon
-    parser.peek_next_with_caution(Token::T_SEMICOLON)
+    parser.peek_next_with_caution(Token::T_SEMICOLON);
 
     // 4th we are expecting the loop condition (expression statement)
     let loop_condition = expression_statement_parser(&mut parser)?; // TODO: write this function
 
     // 5th we are expecting a semi-colon
-    parser.peek_next_with_caution(Token::T_SEMICOLON)
+    parser.peek_next_with_caution(Token::T_SEMICOLON);
 
     // 6th we are expecting the update loop variable (expression)
     let update_loop_var = if parser.peek_curr() == Some(Token::T_ROUND_BRACKET_CLOSE)
@@ -273,10 +274,10 @@ fn for_loop_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
     else{   
         let returned_expr = expression_parser(&mut parser)?; // TODO: write this function
         Some(returned_expr) 
-    }
+    };
 
     // 7th we are expecting a closing round braces
-    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE) 
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE);
 
     // 8th we are expecting a block (curly braces and statements inside it)
     let block = block_parser(&mut parser)?; // TODO: write this function
@@ -299,13 +300,13 @@ fn if_statement_expression<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Erro
     // parser.position += 1; // move to next token
 
     // 1st we are expecting an open round braces
-    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN)
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN);
 
     // 2nd we are expecting the condition expression
     let condition = expression_statement_parser(&mut parser)?; // TODO: write this function
 
     // 3rd we are expecting a closing round braces
-    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE)
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE);
 
     // 4th we are expecting a block (curly braces and statements inside it)
     let block = block_parser(&mut parser)?; // TODO: write this function
@@ -342,7 +343,7 @@ fn if_statement_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> 
     }
     else{
         None
-    }
+    };
 
     Ok(Root::IfStatement {
         if_expression: if_expr,
@@ -426,12 +427,6 @@ fn parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<root>, Errors> {
 
         }
     }
+
+    Ok(roots) // returning the AST
 }
-
-
-
-
-
-
-
-
