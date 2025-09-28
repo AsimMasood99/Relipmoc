@@ -1,21 +1,25 @@
-fn int my_fn(int x, float y) {
-    string my_str = "h\"m\"; ()\\\"m";
-    bool my_bool = x == 40;
-    bool my_other_bool = x != 5 && x <= 10;
-    int shifted = 5 << 1;
-    float my_val = 6.9;
+#fn int my_fn(int x, float y) {
+#    string my_str = "h\"m\"; ()\\\"m";
+#    bool my_bool = x == 40;
+#    bool my_other_bool = x != 5 && x <= 10;
+#    int shifted = 5 << 1;
+#    float my_val = 6.9;
+#
+#    # very nice if condition :^)
+#    if (my_val + 5 >= 10) {
+#        print("yes");
+#    } elif (my_val + 5 < 10) {
+#        print("no");
+#    } else {
+#        print("unfortuante")
+#    }
+#
+#    int new_val = 5 + shifted; #5 shifted one bit added to 5... comment :D
+#    print(new_val);
+#
+#    return x;
+#}
 
-    # very nice if condition :^)
-    if (my_val + 5 >= 10) {
-        print("yes");
-    } elif (my_val + 5 < 10) {
-        print("no");
-    } else {
-        print("unfortuante")
-    }
-
-    int new_val = 5 + shifted; #5 shifted one bit added to 5... comment :D
-    print(new_val);
-
-    return x;
-}
+string my_str = "h\"m\"; ()\\\"m";
+float my_val = 6.9;
+int lol = 5;
