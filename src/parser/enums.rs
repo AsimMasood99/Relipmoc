@@ -72,7 +72,7 @@ pub struct Block{
 pub enum Statement{
     VarDecl(VariableDeclaration),
     Expr(Expression),
-    //Return(Expression),
+    Return(Expression),
     If(IfStatement),
     While(WhileStatement),
     For(ForStatement),

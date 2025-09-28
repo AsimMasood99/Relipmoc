@@ -486,9 +486,11 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let while_stmt = while_loop_parser(tokens)?;
                 statements.push(Statement::While(while_stmt));
             }
-            // TODO: handle other statements like if, while, return, etc.
+            Token::T_RETURN => {
+                let ret_stmt = parse_return_statement(tokens)?;
+                statements.push(Statement::Return(ret_stmt));
+            }
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
-            //other => return Err(Errors::UnexpectedToken(other.clone())),
             _ => {
                 // Try parsing as an expression statement (e.g., function call)
                 let expr = parse_expression(tokens)?;
@@ -664,6 +666,13 @@ fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Error
         update,
         block,
     })
+}
+
+fn parse_return_statement(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    tokens.seek_if(Token::T_RETURN)?;
+    let expr = parse_expression(tokens)?;
+    tokens.seek_if(Token::T_SEMICOLON)?;
+    Ok(expr)
 }
 
 pub fn parse_function_call_arguments(tokens: &mut TokenIterator) -> Result<Vec<Expression>, Errors> {
