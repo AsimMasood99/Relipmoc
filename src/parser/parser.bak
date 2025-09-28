@@ -1,0 +1,452 @@
+use super::super::lexer::tokens::Token::{self};
+use super::enums::{*};
+
+#[derive(Debug)]
+pub enum Errors{
+    UnexpectedEOF,
+    FailedToFindToken(Token),
+    ExpectedTypeToken(Token),
+    ExpectedIdentifier(Token),
+    UnexpectedToken(Token),
+    ExpectedFloatLit,
+    ExpectedIntLit,
+    ExpectedStringLit,
+    ExpectedBoolLit,
+    ExpectedExpr,
+}
+
+#[derive(Debug, Clone)]
+pub enum Type {
+    Int,
+    String,
+    Float,
+    Bool,
+}
+
+
+
+fn params_parser(parser: &Parser) -> Result<FunctionDeclaration, Errors>{
+    let mut params: Vec<Param> = Vec::new();
+
+    // we have read the opening paranthese 
+    parser.position+=1;
+    // now checking if the next one is a closing paranthese
+    if parser.peek_next == Token::T_ROUND_BRACKET_CLOSE
+    {
+        return Ok(params) // empty vector is returned
+    }
+
+    // -------------------------------------
+    loop{
+        // parse param (identifire and token_type[int, string, etc])
+        // 1st parse the parameter type
+        let param_type = match parser.consume()? {
+            Token::T_INT => Type::Int,
+            Token::T_STRING => Type::String,
+            Token::T_FLOAT => Type::Float,
+            Token::T_BOOL => Type::Bool,
+            other => return Err(Errors::ExpectedTypeToken(other.clone())),
+        };
+        
+        
+        // 2nd checking the identifier 
+        let param_identifier = match parser.consume()?{
+            Token::T_IDENTIFIER(name) => name.clone(), // matching and if it matched copy (clone) the name
+            other => return Err(Errors::ExpectedIdentifier(other.clone())) // no match: send error
+        };
+        
+        // TODO: will we be including an equal sign?
+
+        // 3rd now we are adding this parameter to the
+        params.push(Param {
+            type_token: param_type,
+            identifier: param_identifier,
+        });
+
+        // 5th now checking for next semi-colon or end bracket
+        match Param.consume()?
+        {
+            Some(Token::T_ROUND_BRACKET_CLOSE)=>{
+                break; // all parameters dealth with
+            }
+            Some(Token::T_COMMA)=>
+            {
+                continue;
+            }
+        }
+    }
+    Ok(params)
+}
+
+// block parser
+
+fn block_parser(parser: &Parser) -> Result<FunctionDeclaration, Errors>{
+
+    loop{
+        
+    }
+
+}
+
+//multiplication op parser
+fn mul_op_parser(parser: &Parser) -> Result<MultiplicationOperator, Errors> {
+    match parser.consume()? {
+        Token::T_MULTIPLY_OPR => Ok(MultiplicationOperator::Multiply),
+        Token::T_DIVIDE_OPR => Ok(MultiplicationOperator::Divide),
+        Token::T_MODULO_OPR => Ok(MultiplicationOperator::Modulo),
+        other => return Err(Errors::UnexpectedToken(other.clone())),
+    }
+}
+
+// multiplication expression parser
+fn multiplication_expression_parser(parser: &Parser) -> Result<MultiplicationExpression, Errors> {
+    // Start by parsing the first unary-expression
+    let mut result = MultiplicationExpression::Unary(unary_expression_parser(parser)?);
+    
+    // Keep parsing multiplication operations (left-associative)
+    loop {
+        match parser.peek_curr() {
+            Some(Token::T_MULTIPLY_OPR) | Some(Token::T_DIVIDE_OPR) | Some(Token::T_MODULO_OPR) => {
+                // Parse the multiplication operator
+                let operator = mul_op_parser(parser)?;
+                
+                // Parse the right operand (unary-expression)
+                let right_operand = unary_expression_parser(parser)?;
+                
+                // Create new multiplication expression
+                result = MultiplicationExpression::Multiply(
+                    right_operand,           // First operand (unary_expression)
+                    operator,                // Operator (multiplication_operator)
+                    Box::new(result)         // Previous result becomes recursive part
+                );
+            }
+            _ => {
+                // No more multiplication operators
+                break;
+            }
+        }
+    }
+    
+    Ok(result)
+}
+
+// unary op parser
+fn unary_op_parser(parser: &Parser) -> Result<UnaryOperator, Errors> {
+    match parser.consume()? {
+        Token::T_MINUS_OPR => Ok(UnaryOperator::Minus),
+        Token::T_NOT => Ok(UnaryOperator::Not),
+        other => return Err(Errors::UnexpectedToken(other.clone())),
+    }
+}
+
+// unary expression parser
+fn unary_expression_parser(parser: &Parser) -> Result<UnaryExpression, Errors> {
+    // Check if current token is a unary operator
+    match parser.peek_curr() {
+        Some(Token::T_MINUS_OPR) | Some(Token::T_NOT) => {
+            // Parse the unary operator
+            let operator = unary_op_parser(parser)?;
+            
+            // Recursively parse the operand (allows chaining like --x or !-5)
+            let operand = unary_expression_parser(parser)?;
+            
+            Ok(UnaryExpression::UnaryOp(operator, Box::new(operand)))
+        }
+        _ => {
+            // Not a unary operator, parse as primary expression
+
+            // TODO: Implement primary_expression_parser
+            let primary = primary_expression_parser(parser)?;
+            Ok(UnaryExpression::Primary(primary))
+        }
+    }
+}
+
+fn function_declaration(parser: &Parser) -> Result<FunctionDeclaration, Errors> {
+    
+    let new_function = FunctionStatement{};
+
+    // first token should be T_FUNCTION which we already checked before calling this function
+    parser.position += 1; // move to next token
+
+    // 1st will be the function return type
+    let return_type = match parser.consume()?{
+        Token::T_INT => Type::Int,
+            Token::T_STRING => Type::String,
+            Token::T_FLOAT => Type::Float,
+            Token::T_BOOL => Type::Bool,
+            // TODO: Add void return type here 
+            other => return Err(Errors::ExpectedTypeToken(other.clone())),
+    };
+
+    // 2nd will be the function identifier (my_function, etc)
+    let identifier = match parser.consume()? {
+        Token::T_IDENTIFIER(name) => name.clone(),
+        other => return Err(Errors::ExpectedIdentifier(other.clone())),
+    };
+
+    // 3rd will be the check for round bracket open (else give error)
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN);
+    
+    // 4th will be the parameters fow which we have a dedicated function
+    let all_parames = params_parser(&mut parser)?;
+
+    // 5th now we will see a closed round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE);
+    
+    // now curly braces open
+    parser.peek_next_with_caution(Token::T_CURLY_BRACKET_OPEN);
+
+    // TODO: now we will go into the block
+    
+}
+
+
+// variable decleration parser
+fn variable_declaration_parser(parser: &Parser) -> Result<VariableDeclaration, Errors> {
+    //let var = variable_declaration{};
+    
+    let var_type = match parser.consume()? {
+            Token::T_INT => Type::Int,
+            Token::T_STRING => Type::String,
+            Token::T_FLOAT => Type::Float,
+            Token::T_BOOL => Type::Bool,
+            other => return Err(Errors::ExpectedTypeToken(other.clone())),
+        };
+        
+    // 2nd checking the identifier 
+    let var_identifier = match parser.consume()?{
+        Token::T_IDENTIFIER(name) => name.clone(), // matching and if it matched copy (clone) the name
+        other => return Err(Errors::ExpectedIdentifier(other.clone())) // no match: send error
+    };
+    
+    // 3rd is equal sign
+    // params.peek_next_with_caution(Token::T_EQUALS_OPR)
+    
+    // 3rd is the equal sign
+    // 4th is the expression (number that is being assigned)
+    // +++++  (The expression will handle the equal sign and the number) ++++++
+    // TODO: add expression-statement here (for the number)
+
+    // 3rd now we are adding this parameter to the
+    Ok(VariableDeclaration {
+        type_token: var_type,
+        identifier: var_identifier,
+        expression: None // TODO: returned expression will be added here
+    })
+}
+
+// for statement parser
+fn for_loop_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<Root>, Errors> {
+    // for loop is detected (for token has been read)
+    parser.position += 1; // move to next token
+
+
+    // 1st we will be expecting an open round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN);
+
+    // 2nd we are expeting the loop variable decleration
+    let init_loop_variable = if parser.peek_curr() == Some(Token::T_SEMICOLON)
+    {
+        // this means there is no variable to initialize
+        None;
+    }
+    else{   
+        let returned_loop_var = variable_declaration_parser(&mut parser)?;
+        Some(returned_loop_var)
+    };
+
+    // 3rd we are expecting a semi-colon
+    parser.peek_next_with_caution(Token::T_SEMICOLON);
+
+    // 4th we are expecting the loop condition (expression statement)
+    let loop_condition = expression_statement_parser(&mut parser)?; // TODO: write this function
+
+    // 5th we are expecting a semi-colon
+    parser.peek_next_with_caution(Token::T_SEMICOLON);
+
+    // 6th we are expecting the update loop variable (expression)
+    let update_loop_var = if parser.peek_curr() == Some(Token::T_ROUND_BRACKET_CLOSE)
+    {
+        // this means there is no variable to initialize
+        None
+    }
+    else{   
+        let returned_expr = expression_parser(&mut parser)?; // TODO: write this function
+        Some(returned_expr) 
+    };
+
+    // 7th we are expecting a closing round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE);
+
+    // 8th we are expecting a block (curly braces and statements inside it)
+    let block = block_parser(&mut parser)?; // TODO: write this function
+
+    Ok(Root::ForLoop {
+        init_variable: init_loop_variable,
+        condition: loop_condition,
+        update: update_loop_var,
+        body: block,
+    })
+}
+
+
+// helper of if statement parser
+fn if_statement_expression<'a>(tokens: &'a Vec<Token>) -> Result<Vec<Root>, Errors> {
+
+    let if_expr = IfStatementExpression{};
+
+    // first token should be T_IF which we already checked before calling this function
+    // parser.position += 1; // move to next token
+
+    // 1st we are expecting an open round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_OPEN);
+
+    // 2nd we are expecting the condition expression
+    let condition = expression_statement_parser(&mut parser)?; // TODO: write this function
+
+    // 3rd we are expecting a closing round braces
+    parser.peek_next_with_caution(Token::T_ROUND_BRACKET_CLOSE);
+
+    // 4th we are expecting a block (curly braces and statements inside it)
+    let block = block_parser(&mut parser)?; // TODO: write this function
+
+    Ok(IfStatementExpression{
+        condition,
+        block,
+    })
+}
+
+
+// helper of if statement parser
+fn elif_statement(parser: &Parser) -> Result<Vec<Root>, Errors> {
+    let mut elif_statements: Vec<Root> = Vec::new();
+
+    while parser.peek_curr() == Some(Token::T_ELIF) {
+        parser.position += 1; // move to next token
+
+        let elif_expr = if_statement_expression(&mut parser)?;
+        elif_statements.push(elif_expr);
+    }
+
+    Ok(elif_statements)
+}
+
+
+// if statement parser
+fn if_statement_parser(tokens: &Vec<Token>) -> Result<Vec<Root>, Errors> {
+    // first token should be T_IF which we already checked before calling this function
+    parser.position += 1; // move to next token
+
+
+    let if_expr = if_statement_expression(&mut parser)?;
+
+    // 2nd is the elif statements (zero or more)
+    let mut elif_statements = elif_statement(&mut parser)?;
+
+    // 3rd is the else statement (optional)
+    let else_statement = if parser.peek_curr() == Some(Token::T_ELSE)
+    {
+        parser.position += 1; // move to next token
+        Some(block_parser(&mut parser)?) // parsing the block after else
+    }
+    else{
+        None
+    };
+
+    Ok(Root::IfStatement {
+        if_expression: if_expr,
+        elif_expressions: elif_statements,
+        else_expression: else_statement,
+    })
+}
+
+fn return_statement_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<Root>, Errors> {
+    // we have read the return token already and moving to next token
+    parser.position += 1;
+
+    // now we are expecting an expression statement
+    let expr = expression_statement_parser(&mut parser)?; // TODO: write this function
+
+    Ok(Root::ReturnStatement {
+        expr,
+    })
+}
+
+fn break_statement_parser<'a>(tokens: &'a Vec<Token>) -> Result<Vec<Root>, Errors> {
+    // we have read the break token already and moving to next token
+    parser.position += 1;
+
+    Ok(Root::BreakStatement)
+
+    // no need to check for semi-colon as it is not required after break
+}
+
+// entry point of parser
+pub struct Parser {
+    pub position: usize,
+    pub stream: Vec<Token>,
+}
+
+impl Parser {
+    pub fn peek_curr(&self) -> Option<&Token> {
+        self.stream.get(self.position)
+    }
+
+    pub fn peek_next(&self) -> Option<&Token> {
+        self.stream.get(self.position + 1)
+    }
+
+    pub fn peek_next_with_caution(&mut self, expected: Token) -> Result<(), Errors> {
+        match self.peek_next() {
+            Some(token) if *token == expected => {
+                self.position += 1;
+                Ok(())
+            }
+            Some(other) => Err(Errors::UnexpectedToken(other.clone())),
+            None => Err(Errors::UnexpectedEOF),
+        }
+    }
+
+    pub fn consume(&mut self) -> Result<&Token, Errors> {
+        let token = self.stream.get(self.position).ok_or(Errors::UnexpectedEOF)?;
+        self.position += 1;
+        Ok(token)
+    }
+}
+
+pub fn parser(tokens: Vec<Token>) -> Result<Vec<Root>, Errors> {
+    let mut parser = Parser {
+        position: 0,
+        stream: tokens,
+    };
+
+    let mut roots: Vec<Root> = Vec::new();
+    while parser.position < parser.stream.len() { // going through all tokens
+        let current_token = match parser.peek_curr() {
+            Some(token) => token,
+            None => break,
+        };
+
+        match current_token {
+            Token::T_FUNCTION => {
+                // Parse the function declaration.
+                let function_node = function_declaration(&parser)?;
+                // Add the resulting AST node to our tree.
+                roots.push(function_node); 
+            }
+            Token::T_STRING | Token::T_INT | Token::T_FLOAT | Token::T_BOOL => {
+                // Parse the variable declaration.
+                let var_node = variable_declaration_parser(&parser)?;
+                // Add the resulting AST node to our tree.
+                roots.push(Root::Var(var_node)); 
+            }
+            _ => {
+                // Syntax error: We found a token we don't know how to handle at the top level.
+                return Err(Errors::UnexpectedToken(current_token.clone()));
+            }
+        }
+    }
+
+    Ok(roots) // returning the AST
+}

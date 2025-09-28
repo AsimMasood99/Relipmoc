@@ -1,9 +1,8 @@
 use std::fs;
 use std::path::Path;
 
-// mod tokens;
-// use tokens::Token::{self, *};
 mod lexer;
+mod parser;
 
 fn get_code() -> String {
     // TODO: allow custom file path
@@ -22,5 +21,8 @@ fn get_code() -> String {
 fn main() {
     let code = get_code();
     let tokens = lexer::lexer::lex(code);
+    
     println!("{:?}", tokens);
+
+    parser::parser::parser(tokens);
 }
