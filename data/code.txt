@@ -7,32 +7,20 @@ fn int my_fn(int x, float y) {
 
     # very nice if condition :^)
     if (my_val + 5 >= 10) {
-        #print("yes");
+        print("yes");
     } elif (my_val + 5 < 10) {
-        #print("no");
+        print("no");
     } else {
-        #print("unfortuante")
+        print("unfortuante");
     }
 
     while (x < 5)
     {
-        #print("while running")
+        print("while running");
     }
 
     int new_val = 5 + shifted; #5 shifted one bit added to 5... comment :D
-    #print(new_val);
+    print(new_val);
 
     #return x;
 }
-
-fn my_fn(int x, float y) {
-    float my_val = 6.9;
-    int lol = 5;
-    int other = lol;
-    bool my_bool = lol == 40;
-    int my_int = lol + (x*5 - (lol+2));
-    int other_int = a * b^2 + c / d - 4;
-    for(int n = 0; n == 10;n = n + 1;) {}
-}
-
-

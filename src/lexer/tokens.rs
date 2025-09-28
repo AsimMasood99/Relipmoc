@@ -8,7 +8,7 @@ pub enum Token {
     T_WHILE, // while
     T_FOR, // for
     T_RETURN, // return
-    T_PRINT, // print
+    //T_PRINT, // print
 
     T_IDENTIFIER(String),
     T_STRINGLIT(String),

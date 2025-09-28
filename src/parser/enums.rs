@@ -34,7 +34,7 @@ pub enum Expression{
         operator: Token,
         expression: Box<Expression>,
     },
-    // TODO
+    FunctionCall(FunctionCallStatement),
 }
 
 #[derive(Debug)]
@@ -43,6 +43,12 @@ pub enum Constants{
     Float(f64), // T_CONST_FLOAT
     Str(String), // T_STRINGLIT
     Bool(bool), // T_CONST_BOOL
+}
+
+#[derive(Debug)]
+pub struct FunctionCallStatement {
+    pub identifier: String,
+    pub args: Vec<Expression>,
 }
 
 #[derive(Debug)]
@@ -73,7 +79,6 @@ pub enum Statement{
     While(WhileStatement),
     For(ForStatement),
     Assignment(AssignmentStatement),
-    Function(FunctionStatement),
 }
 
 #[derive(Debug)]
@@ -91,28 +96,10 @@ pub struct ElifBlock{
 }
 
 #[derive(Debug)]
-pub struct WhileStatement
-{
+pub struct WhileStatement {
     pub condition: Expression,
     pub block: Block,
 }
-
-
-
-#[derive(Debug)]
-pub struct FunctionCall
-{
-    pub identifier: String,
-    pub args: Vec<FunctionArguments>,
-}
-
-
-#[derive (Debug)]
-pub struct FunctionArguments
-{
-    pub expression: Expression,
-}
-
 
 #[derive(Debug)]
 pub struct ForStatement {

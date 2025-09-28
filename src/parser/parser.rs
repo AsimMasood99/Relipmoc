@@ -257,6 +257,22 @@ fn parse_unary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
 }
 
 fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    // Check for identifier first to handle function calls properly
+    if let Some(Token::T_IDENTIFIER(_)) = tokens.peek_curr() {
+        if let Some(Token::T_ROUND_BRACKET_OPEN) = tokens.peek_next() {
+            // Function call - don't consume the identifier here, let parse_function_call handle it
+            let func_call = parse_function_call(tokens)?;
+            return Ok(Expression::FunctionCall(func_call));
+        } else {
+            // Regular identifier
+            let name = match tokens.consume()? {
+                Token::T_IDENTIFIER(name) => name.clone(),
+                other => return Err(Errors::ExpectedIdentifier(other.clone())),
+            };
+            return Ok(Expression::Identifier(name));
+        }
+    }
+
     let current = tokens.consume()?;
 
     match current {
@@ -277,15 +293,11 @@ fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
         Token::T_CONST_BOOL(value) => {
             Ok(Expression::Literal(Constants::Bool(value.clone())))
         }
-        Token::T_IDENTIFIER(name) => {
-            Ok(Expression::Identifier(name.clone()))
-        }
         Token::T_ROUND_BRACKET_OPEN => {
             let expr = parse_expression(tokens)?;
             tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
             Ok(expr)
         }
-
 
         other => Err(Errors::UnexpectedToken(other.clone())),
     }
@@ -467,17 +479,22 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let for_stmt = parse_for_statement(tokens)?;
                 statements.push(Statement::For(for_stmt));
             }
-            Token::T_IDENTIFIER(_) => {
-                let assign_stmt = parse_assignment_statement(tokens)?;
-                statements.push(Statement::Assignment(assign_stmt));
-            }
+            // Token::T_IDENTIFIER(_) => {
+            //     let assign_stmt = parse_assignment_statement(tokens)?;
+            //     statements.push(Statement::Assignment(assign_stmt));
+            // }
             Token::T_WHILE => {
                 let while_stmt = while_loop_parser(tokens)?;
                 statements.push(Statement::While(while_stmt));
             }
             // TODO: handle other statements like if, while, return, etc.
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
-            other => return Err(Errors::UnexpectedToken(other.clone())),
+            //other => return Err(Errors::UnexpectedToken(other.clone())),
+            _ => {
+                // Try parsing as an expression statement (e.g., function call)
+                let expr = parse_expression(tokens)?;
+                statements.push(Statement::Expr(expr));
+            }
         }
     }
     
@@ -650,8 +667,7 @@ fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Error
     })
 }
 
-pub fn parse_function_arguments(tokens: &mut TokenIterator) -> Result<Vec<FunctionArguments>, Errors> 
-{
+pub fn parse_function_call_arguments(tokens: &mut TokenIterator) -> Result<Vec<Expression>, Errors> {
     let mut args = Vec::new();
 
     // if next token is ')', then no arguments
@@ -661,7 +677,7 @@ pub fn parse_function_arguments(tokens: &mut TokenIterator) -> Result<Vec<Functi
 
     loop {
         let expr = parse_expression(tokens)?;
-        args.push(FunctionArguments { expression: expr });
+        args.push(expr);
 
         if let Some(Token::T_COMMA) = tokens.peek_curr() {
             tokens.consume()?; // consume the comma
@@ -672,6 +688,25 @@ pub fn parse_function_arguments(tokens: &mut TokenIterator) -> Result<Vec<Functi
     }
 
     Ok(args)
+}
+
+pub fn parse_function_call(tokens: &mut TokenIterator) -> Result<FunctionCallStatement, Errors> {
+    let func_name = match tokens.consume()? {
+        Token::T_IDENTIFIER(name) => name.clone(),
+        other => return Err(Errors::ExpectedIdentifier(other.clone())),
+    };
+
+    tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
+
+    let args = parse_function_call_arguments(tokens)?;
+
+    tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+    tokens.seek_if(Token::T_SEMICOLON)?;
+
+    Ok(FunctionCallStatement {
+        identifier: func_name,
+        args,
+    })
 }
 
 pub fn parser(tokens: Vec<Token>) -> RootList {

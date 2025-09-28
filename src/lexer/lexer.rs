@@ -110,9 +110,9 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
         else if substr == "return" {
             tokens.push(T_RETURN);
         }
-        else if substr == "print" {
-            tokens.push(T_PRINT);
-        }
+        // else if substr == "print" {
+        //     tokens.push(T_PRINT);
+        // }
         else if substr == "int" {
             tokens.push(T_INT);
         }
