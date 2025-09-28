@@ -87,6 +87,80 @@ fn block_parser<'a>(parser: &mut Parser<'a>) -> Result<FunctionDeclaration, Erro
 
 }
 
+//multiplication op parser
+fn mul_op_parser<'a>(parser: &mut Parser<'a>) -> Result<multiplication_operator, Errors> {
+    match parser.consume()? {
+        Token::T_MULTIPLY_OPR => Ok(multiplication_operator::Multiply),
+        Token::T_DIVIDE_OPR => Ok(multiplication_operator::Divide),
+        Token::T_MODULO_OPR => Ok(multiplication_operator::Modulo),
+        other => return Err(Errors::UnexpectedToken(other.clone())),
+    }
+}
+
+// multiplication expression parser
+fn multiplication_expression_parser<'a>(parser: &mut Parser<'a>) -> Result<multiplication_expression, Errors> {
+    // Start by parsing the first unary-expression
+    let mut result = multiplication_expression::unary(unary_expression_parser(parser)?);
+    
+    // Keep parsing multiplication operations (left-associative)
+    loop {
+        match parser.peek_curr() {
+            Some(Token::T_MULTIPLY_OPR) | Some(Token::T_DIVIDE_OPR) | Some(Token::T_MODULO_OPR) => {
+                // Parse the multiplication operator
+                let operator = mul_op_parser(parser)?;
+                
+                // Parse the right operand (unary-expression)
+                let right_operand = unary_expression_parser(parser)?;
+                
+                // Create new multiplication expression
+                result = multiplication_expression::Multiply(
+                    right_operand,           // First operand (unary_expression)
+                    operator,                // Operator (multiplication_operator)
+                    Box::new(result)         // Previous result becomes recursive part
+                );
+            }
+            _ => {
+                // No more multiplication operators
+                break;
+            }
+        }
+    }
+    
+    Ok(result)
+}
+
+// unary op parser
+fn unary_op_parser<'a>(parser: &mut Parser<'a>) -> Result<unary_operator, Errors> {
+    match parser.consume()? {
+        Token::T_MINUS_OPR => Ok(unary_operator::Minus),
+        Token::T_NOT => Ok(unary_operator::Not),
+        other => return Err(Errors::UnexpectedToken(other.clone())),
+    }
+}
+
+// unary expression parser
+fn unary_expression_parser<'a>(parser: &mut Parser<'a>) -> Result<unary_expression, Errors> {
+    // Check if current token is a unary operator
+    match parser.peek_curr() {
+        Some(Token::T_MINUS_OPR) | Some(Token::T_NOT) => {
+            // Parse the unary operator
+            let operator = unary_op_parser(parser)?;
+            
+            // Recursively parse the operand (allows chaining like --x or !-5)
+            let operand = unary_expression_parser(parser)?;
+            
+            Ok(unary_expression::UnaryOp(operator, Box::new(operand)))
+        }
+        _ => {
+            // Not a unary operator, parse as primary expression
+
+            // TODO: Implement primary_expression_parser
+            let primary = primary_expression_parser(parser)?;
+            Ok(unary_expression::primary(primary))
+        }
+    }
+}
+
 fn function_declaration<'a>(parser: &mut Parser<'a>, &mut ) -> Result<FunctionDeclaration, Errors> {
     
     let new_Function = function_statement{}
