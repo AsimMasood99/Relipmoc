@@ -64,9 +64,9 @@ pub enum Statement{
     Expr(Expression),
     //Return(Expression),
     If(IfStatement),
-    // While(WhileStatement),
+    While(WhileStatement),
     // For(ForStatement),
-    // Function(FunctionStatement),
+    Function(FunctionStatement),
 }
 
 #[derive(Debug)]
@@ -82,3 +82,27 @@ pub struct ElifBlock{
     pub condition: Expression,
     pub block: Block,
 }
+
+#[derive(Debug)]
+pub struct WhileStatement
+{
+    pub condition: Expression,
+    pub block: Block,
+}
+
+
+
+#[derive(Debug)]
+pub struct FunctionCall
+{
+    pub identifier: String,
+    pub args: Vec<FunctionArguments>,
+}
+
+
+#[derive (Debug)]
+pub struct FunctionArguments
+{
+    pub expression: Expression,
+}
+

@@ -486,6 +486,34 @@ fn parse_if_statement(tokens: &mut TokenIterator) -> Result<IfStatement, Errors>
     })
 }
 
+
+fn while_loop_parser(tokens: &mut TokenIterator) -> Result<WhileStatement, Errors> {
+    tokens.seek_if(Token::T_WHILE)?;
+
+    // opening bracket
+    tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
+
+    // condition expression
+    let condition = parse_expression(tokens)?;
+
+    // closing bracket
+    tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+
+    // { block start
+    tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+
+    let block = parse_block(tokens)?;
+
+    // } block end
+    tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
+
+    Ok(WhileStatement {
+        condition,
+        block,
+    })
+
+}
+
 fn parse_elif_blocks(tokens: &mut TokenIterator) -> Result<Vec<ElifBlock>, Errors> {
     let mut elif_blocks = Vec::new();
     
@@ -535,6 +563,32 @@ fn parse_else_block(tokens: &mut TokenIterator) -> Result<Option<Block>, Errors>
         Ok(None)
     }
 }
+
+pub fn parse_function_arguments(tokens: &mut TokenIterator) -> Result<Vec<FunctionArguments>, Errors> 
+{
+    let mut args = Vec::new();
+
+    // if next token is ')', then no arguments
+    if let Some(Token::T_ROUND_BRACKET_CLOSE) = tokens.peek_curr() {
+        return Ok(args);
+    }
+
+    loop {
+        let expr = parse_expression(tokens)?;
+        args.push(FunctionArguments { expression: expr });
+
+        if let Some(Token::T_COMMA) = tokens.peek_curr() {
+            tokens.consume()?; // consume the comma
+            continue;
+        } else {
+            break; // no more arguments
+        }
+    }
+
+    Ok(args)
+}
+
+
 
 pub fn parser(tokens: Vec<Token>) -> RootList {
     let mut token_iterator = TokenIterator::new(tokens);
