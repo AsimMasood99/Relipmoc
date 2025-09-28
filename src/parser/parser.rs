@@ -285,6 +285,8 @@ fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
             Ok(expr)
         }
+
+
         other => Err(Errors::UnexpectedToken(other.clone())),
     }
 }
@@ -469,6 +471,10 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let assign_stmt = parse_assignment_statement(tokens)?;
                 statements.push(Statement::Assignment(assign_stmt));
             }
+            Token::T_WHILE => {
+                let while_stmt = while_loop_parser(tokens)?;
+                statements.push(Statement::While(while_stmt));
+            }
             // TODO: handle other statements like if, while, return, etc.
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
             other => return Err(Errors::UnexpectedToken(other.clone())),
@@ -510,6 +516,34 @@ fn parse_if_statement(tokens: &mut TokenIterator) -> Result<IfStatement, Errors>
         elif_blocks,
         else_block,
     })
+}
+
+
+fn while_loop_parser(tokens: &mut TokenIterator) -> Result<WhileStatement, Errors> {
+    tokens.seek_if(Token::T_WHILE)?;
+
+    // opening bracket
+    tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
+
+    // condition expression
+    let condition = parse_expression(tokens)?;
+
+    // closing bracket
+    tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+
+    // { block start
+    tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+
+    let block = parse_block(tokens)?;
+
+    // } block end
+    tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
+
+    Ok(WhileStatement {
+        condition,
+        block,
+    })
+
 }
 
 fn parse_elif_blocks(tokens: &mut TokenIterator) -> Result<Vec<ElifBlock>, Errors> {
@@ -614,6 +648,30 @@ fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Error
         update,
         block,
     })
+}
+
+pub fn parse_function_arguments(tokens: &mut TokenIterator) -> Result<Vec<FunctionArguments>, Errors> 
+{
+    let mut args = Vec::new();
+
+    // if next token is ')', then no arguments
+    if let Some(Token::T_ROUND_BRACKET_CLOSE) = tokens.peek_curr() {
+        return Ok(args);
+    }
+
+    loop {
+        let expr = parse_expression(tokens)?;
+        args.push(FunctionArguments { expression: expr });
+
+        if let Some(Token::T_COMMA) = tokens.peek_curr() {
+            tokens.consume()?; // consume the comma
+            continue;
+        } else {
+            break; // no more arguments
+        }
+    }
+
+    Ok(args)
 }
 
 pub fn parser(tokens: Vec<Token>) -> RootList {
