@@ -188,13 +188,13 @@ fn parse_term(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
 }
 
 fn parse_factor(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
-    let mut expr = parse_unary(tokens)?;
+    let mut expr = parse_exponential(tokens)?;
     
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_MULTIPLY_OPR => {
                 tokens.consume()?;
-                let right = parse_unary(tokens)?;
+                let right = parse_exponential(tokens)?;
                 expr = Expression::BinaryOperation {
                     left: Box::new(expr),
                     operator: Token::T_MULTIPLY_OPR,
@@ -203,10 +203,31 @@ fn parse_factor(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             }
             Token::T_DIVIDE_OPR => {
                 tokens.consume()?;
-                let right = parse_unary(tokens)?;
+                let right = parse_exponential(tokens)?;
                 expr = Expression::BinaryOperation {
                     left: Box::new(expr),
                     operator: Token::T_DIVIDE_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_exponential(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_unary(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_EXPONENT_OPR => {
+                tokens.consume()?;
+                let right = parse_unary(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_EXPONENT_OPR,
                     right: Box::new(right),
                 };
             }

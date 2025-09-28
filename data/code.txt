@@ -26,4 +26,4 @@ int lol = 5;
 int other = lol;
 bool my_bool = lol == 40;
 int my_int = lol + (lol*5 - (lol+2));
-int other_int = a * b + c / d - 4;
+int other_int = a * b^2 + c / d - 4;

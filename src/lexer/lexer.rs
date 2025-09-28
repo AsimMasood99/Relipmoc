@@ -23,6 +23,7 @@ fn find_delim(c: char) -> bool {
             '-',
             '*',
             '/',
+            '^',
             '#',
         ].contains(&c)
 }
@@ -220,6 +221,9 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
         }
         else if substr == "/" {
             tokens.push(T_DIVIDE_OPR);
+        }
+        else if substr == "^" {
+            tokens.push(T_EXPONENT_OPR);
         }
         else if string_lit {
             tokens.push(T_STRINGLIT(substr.clone()));

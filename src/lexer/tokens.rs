@@ -45,6 +45,7 @@ pub enum Token {
     T_MINUS_OPR, // -
     T_MULTIPLY_OPR, // *
     T_DIVIDE_OPR, // /
+    T_EXPONENT_OPR, // ^
 
     T_INT, // 0
     T_FLOAT, // 0.0
