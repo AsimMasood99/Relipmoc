@@ -50,4 +50,5 @@ pub enum Token {
     T_FLOAT, // 0.0
     T_BOOL, // true | false
     T_STRING, // string
+    T_VOID, // void
 }

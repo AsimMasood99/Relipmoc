@@ -23,5 +23,5 @@
 string my_str = "h\"m\"; ()\\\"m";
 float my_val = 6.9;
 int lol = 5;
-fn int my_fn(int x, float y)
+fn my_fn(int x, float y)
 

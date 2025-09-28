@@ -107,20 +107,42 @@ fn parse_parameter_list(tokens: &mut TokenIterator) -> Result<Vec<Parameter>, Er
 }
 
 fn parse_function_statement(tokens: &mut TokenIterator) -> Result<FunctionStatement, Errors> {
-    // return type
-    let return_type = match tokens.consume()? {
-        Token::T_INT => Token::T_INT,
-        Token::T_STRING => Token::T_STRING,
-        Token::T_FLOAT => Token::T_FLOAT,
-        Token::T_BOOL => Token::T_BOOL,
-        // TODO: void type
-        other => return Err(Errors::ExpectedTypeToken(other.clone())),
-    };
 
-    // function name
-    let func_name = match tokens.consume()? {
-        Token::T_IDENTIFIER(name) => name.clone(),
-        other => return Err(Errors::ExpectedIdentifier(other.clone())),
+    tokens.consume().unwrap(); // consume 'func' token
+    let (return_type, func_name) = match tokens.peek_curr() {
+        Some(Token::T_INT) | Some(Token::T_STRING) | Some(Token::T_FLOAT) | Some(Token::T_BOOL) => {
+            // Explicit return type provided
+            let ret_type = match tokens.consume()? {
+                Token::T_INT => Token::T_INT,
+                Token::T_STRING => Token::T_STRING,
+                Token::T_FLOAT => Token::T_FLOAT,
+                Token::T_BOOL => Token::T_BOOL,
+                other => return Err(Errors::ExpectedTypeToken(other.clone())),
+            };
+            
+            // function name
+            let name = match tokens.consume()? {
+                Token::T_IDENTIFIER(name) => name.clone(),
+                other => return Err(Errors::ExpectedIdentifier(other.clone())),
+            };
+            
+            (ret_type, name)
+        }
+        Some(Token::T_IDENTIFIER(_)) => {
+            let name = match tokens.consume()? {
+                Token::T_IDENTIFIER(name) => name.clone(),
+                other => return Err(Errors::ExpectedIdentifier(other.clone())),
+            };
+            
+            (Token::T_VOID, name) // Default to void
+        }
+        other => {
+            // Handle the Option properly
+            match other {
+                Some(token) => return Err(Errors::ExpectedIdentifier(token.clone())),
+                None => return Err(Errors::UnexpectedEOF),
+            }
+        }
     };
 
     // opening parenthesis
@@ -160,7 +182,6 @@ pub fn parser(tokens: Vec<Token>) -> RootList {
                 }
             }
             Some(Token::T_FUNCTION) => {
-                token_iterator.consume().unwrap(); // consume 'func' token
                 match parse_function_statement(&mut token_iterator) {
                     Ok(func_stmt) => roots.push(Root::Func(func_stmt)),
                     Err(e) => {
