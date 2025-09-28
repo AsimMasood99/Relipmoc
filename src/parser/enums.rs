@@ -65,7 +65,7 @@ pub enum Statement{
     //Return(Expression),
     If(IfStatement),
     // While(WhileStatement),
-    // For(ForStatement),
+    For(ForStatement),
     // Function(FunctionStatement),
 }
 
@@ -80,5 +80,13 @@ pub struct IfStatement{
 #[derive(Debug)]
 pub struct ElifBlock{
     pub condition: Expression,
+    pub block: Block,
+}
+
+#[derive(Debug)]
+pub struct ForStatement {
+    pub init_var: Option<VariableDeclaration>,
+    pub condition: Option<Expression>,
+    pub update: Option<Expression>,
     pub block: Block,
 }
