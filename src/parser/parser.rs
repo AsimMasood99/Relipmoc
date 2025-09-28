@@ -335,7 +335,7 @@ fn parse_assignment_statement(tokens: &mut TokenIterator) -> Result<AssignmentSt
 
     Ok(AssignmentStatement {
         identifier: var_identifier,
-        expression: expression,
+        expression,
     })
 }
 
@@ -587,7 +587,7 @@ fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Error
     let condition = if let Some(Token::T_SEMICOLON) = tokens.peek_curr() {
         tokens.consume()?; // consume semicolon
         None // empty condition
-    } else { // Else parse condition expressin 
+    } else { // Else parse condition expression 
         let expr = parse_expression(tokens)?;
         tokens.seek_if(Token::T_SEMICOLON)?;
         Some(expr)
