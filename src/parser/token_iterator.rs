@@ -17,12 +17,15 @@ impl TokenIterator {
     }
 
     pub fn seek_if(&mut self, expected: Token) -> Result<(), Errors> {
-        match self.peek_next() {
-            Some(token) if *token == expected => {
-                self.position += 1;
-                Ok(())
+        match self.peek_curr() {
+            Some(token) => {
+                if *token == expected {
+                    self.position += 1;
+                    Ok(())
+                } else {
+                    Err(Errors::UnexpectedToken(token.clone()))
+                }
             }
-            Some(other) => Err(Errors::UnexpectedToken(other.clone())),
             None => Err(Errors::UnexpectedEOF),
         }
     }

@@ -14,7 +14,12 @@ fn parse_expression(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
         Token::T_CONST_FLOAT(value) => {
             Ok(Expression::Literal(Constants::Float(value.clone())))
         }
-        Token::T_STRINGLIT(value) => {
+        Token::T_DOUBLE_QUOTE => {
+            let value = match tokens.consume()? {
+                Token::T_STRINGLIT(s) => s.clone(),
+                _ => return Err(Errors::ExpectedStringLit),
+            };
+            tokens.seek_if(Token::T_DOUBLE_QUOTE)?;
             Ok(Expression::Literal(Constants::Str(value.clone())))
         }
         Token::T_CONST_BOOL(value) => {
@@ -48,7 +53,7 @@ fn parse_variable_declaration(tokens: &mut TokenIterator) -> Result<VariableDecl
 
     // ';' token
     tokens.seek_if(Token::T_SEMICOLON)?;
-    
+
     Ok(VariableDeclaration {
         type_token: var_type,
         identifier: var_identifier,

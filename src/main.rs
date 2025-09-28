@@ -22,7 +22,9 @@ fn main() {
     let code = get_code();
     let tokens = lexer::lexer::lex(code);
     
-    println!("{:?}", tokens);
+    println!("{:?}\n\n", tokens);
 
-    parser::parser::parser(tokens);
+    let ast = parser::parser::parser(tokens);
+
+    println!("{:#?}\n\n", ast);
 }
