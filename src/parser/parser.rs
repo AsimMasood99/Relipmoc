@@ -285,6 +285,8 @@ fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
             Ok(expr)
         }
+
+
         other => Err(Errors::UnexpectedToken(other.clone())),
     }
 }
