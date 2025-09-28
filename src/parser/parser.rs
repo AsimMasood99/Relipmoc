@@ -439,6 +439,10 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let var_decl = parse_variable_declaration(tokens)?;
                 statements.push(Statement::VarDecl(var_decl));
             }
+            Token::T_IF => {
+                let if_stmt = parse_if_statement(tokens)?;
+                statements.push(Statement::If(if_stmt));
+            }
             // TODO: handle other statements like if, while, return, etc.
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
             other => return Err(Errors::UnexpectedToken(other.clone())),
@@ -448,6 +452,89 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
     Ok(Block { statements })
 }
 
+fn parse_if_statement(tokens: &mut TokenIterator) -> Result<IfStatement, Errors> {
+    tokens.seek_if(Token::T_IF)?;
+    
+    // opening bracket
+    tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
+    
+    // condition expression
+    let condition = parse_expression(tokens)?;
+    
+    // closing bracket
+    tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+    
+    // { block start
+    tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+    
+    let block = parse_block(tokens)?;
+    
+    // } block end
+    tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
+    
+    // Parse optional elif blocks
+    let elif_blocks = parse_elif_blocks(tokens)?;
+    
+    // Parse optional else block
+    let else_block = parse_else_block(tokens)?;
+    
+    Ok(IfStatement {
+        condition,
+        block,
+        elif_blocks,
+        else_block,
+    })
+}
+
+fn parse_elif_blocks(tokens: &mut TokenIterator) -> Result<Vec<ElifBlock>, Errors> {
+    let mut elif_blocks = Vec::new();
+    
+    while let Some(Token::T_ELSE_IF) = tokens.peek_curr() {
+        tokens.consume()?; // consume ELIF
+        
+        // opening bracket
+        tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
+        
+        // condition expression
+        let elif_condition = parse_expression(tokens)?;
+
+        // closing bracket
+        tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+        
+        // { block start
+        tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+        
+        let elif_block = parse_block(tokens)?;
+        
+        // } block end
+        tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
+        
+        elif_blocks.push(ElifBlock {
+            condition: elif_condition,
+            block: elif_block,
+        });
+    }
+    
+    Ok(elif_blocks)
+}
+
+fn parse_else_block(tokens: &mut TokenIterator) -> Result<Option<Block>, Errors> {
+    if let Some(Token::T_ELSE) = tokens.peek_curr() {
+        tokens.consume()?; // consume ELSE
+        
+        // { block start
+        tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+        
+        let block = parse_block(tokens)?;
+        
+        // } block end
+        tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
+        
+        Ok(Some(block))
+    } else {
+        Ok(None)
+    }
+}
 
 pub fn parser(tokens: Vec<Token>) -> RootList {
     let mut token_iterator = TokenIterator::new(tokens);

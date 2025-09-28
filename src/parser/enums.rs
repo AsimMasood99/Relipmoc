@@ -63,8 +63,22 @@ pub enum Statement{
     VarDecl(VariableDeclaration),
     Expr(Expression),
     //Return(Expression),
-    //If(IfStatement),
+    If(IfStatement),
     // While(WhileStatement),
     // For(ForStatement),
     // Function(FunctionStatement),
+}
+
+#[derive(Debug)]
+pub struct IfStatement{
+    pub condition: Expression,
+    pub block: Block,
+    pub elif_blocks: Vec<ElifBlock>,
+    pub else_block: Option<Block>,
+}
+
+#[derive(Debug)]
+pub struct ElifBlock{
+    pub condition: Expression,
+    pub block: Block,
 }
