@@ -3,8 +3,239 @@ use crate::lexer::tokens::Token;
 use crate::parser::token_iterator::TokenIterator;
 use crate::parser::errors::Errors;
 
-// TODO: handle rest of non constants expressions
 fn parse_expression(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    parse_logical_or(tokens)
+}
+
+fn parse_logical_or(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_logical_and(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_OR_OPR => {
+                tokens.consume()?;
+                let right = parse_logical_and(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_OR_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_logical_and(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_equality(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_AND_OPR => {
+                tokens.consume()?;
+                let right = parse_equality(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_AND_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_equality(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_comparison(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_EQUALS_OPR => {
+                tokens.consume()?;
+                let right = parse_comparison(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_EQUALS_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_NOT_EQUALS_OPR => {
+                tokens.consume()?;
+                let right = parse_comparison(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_NOT_EQUALS_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_comparison(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_shift(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_GREATER_THAN_OPR => {
+                tokens.consume()?;
+                let right = parse_shift(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_GREATER_THAN_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_LESS_THAN_OPR => {
+                tokens.consume()?;
+                let right = parse_shift(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_LESS_THAN_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_GREATER_THAN_EQUAL_TO_OPR => {
+                tokens.consume()?;
+                let right = parse_shift(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_GREATER_THAN_EQUAL_TO_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_LESS_THAN_EQUAL_TO_OPR => {
+                tokens.consume()?;
+                let right = parse_shift(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_LESS_THAN_EQUAL_TO_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_shift(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_term(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_LEFT_SHIFT_OPR => {
+                tokens.consume()?;
+                let right = parse_term(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_LEFT_SHIFT_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_RIGHT_SHIFT_OPR => {
+                tokens.consume()?;
+                let right = parse_term(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_RIGHT_SHIFT_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_term(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_factor(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_PLUS_OPR => {
+                tokens.consume()?;
+                let right = parse_factor(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_PLUS_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_MINUS_OPR => {
+                tokens.consume()?;
+                let right = parse_factor(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_MINUS_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_factor(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    let mut expr = parse_unary(tokens)?;
+    
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_MULTIPLY_OPR => {
+                tokens.consume()?;
+                let right = parse_unary(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_MULTIPLY_OPR,
+                    right: Box::new(right),
+                };
+            }
+            Token::T_DIVIDE_OPR => {
+                tokens.consume()?;
+                let right = parse_unary(tokens)?;
+                expr = Expression::BinaryOperation {
+                    left: Box::new(expr),
+                    operator: Token::T_DIVIDE_OPR,
+                    right: Box::new(right),
+                };
+            }
+            _ => break,
+        }
+    }
+    
+    Ok(expr)
+}
+
+fn parse_unary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
+    if let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_NOT | Token::T_MINUS_OPR => {
+                let operator = tokens.consume()?.clone();
+                let expression = parse_unary(tokens)?;
+                return Ok(Expression::UnaryOperation {
+                    operator: operator,
+                    expression: Box::new(expression),
+                });
+            }
+            _ => {}
+        }
+    }
+    
+    parse_primary(tokens)
+}
+
+fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let current = tokens.consume()?;
 
     match current {
@@ -24,6 +255,14 @@ fn parse_expression(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
         }
         Token::T_CONST_BOOL(value) => {
             Ok(Expression::Literal(Constants::Bool(value.clone())))
+        }
+        Token::T_IDENTIFIER(name) => {
+            Ok(Expression::Identifier(name.clone()))
+        }
+        Token::T_ROUND_BRACKET_OPEN => {
+            let expr = parse_expression(tokens)?;
+            tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+            Ok(expr)
         }
         other => Err(Errors::UnexpectedToken(other.clone())),
     }

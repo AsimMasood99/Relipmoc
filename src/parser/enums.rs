@@ -18,6 +18,16 @@ pub struct VariableDeclaration{ // for declaration of variables
 #[derive(Debug)]
 pub enum Expression{
     Literal(Constants),
+    Identifier(String),
+    BinaryOperation{ // like 5 + 3 // two expressions with an operator in between
+        left: Box<Expression>,
+        operator: Token,
+        right: Box<Expression>,
+    },
+    UnaryOperation{ // like -5 or !abc // an operator followed by an expression
+        operator: Token,
+        expression: Box<Expression>,
+    },
     // TODO
 }
 
