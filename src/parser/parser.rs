@@ -367,8 +367,8 @@ fn parse_parameter_list(tokens: &mut TokenIterator) -> Result<Vec<Parameter>, Er
 }
 
 fn parse_function_statement(tokens: &mut TokenIterator) -> Result<FunctionStatement, Errors> {
+    tokens.seek_if(Token::T_FUNCTION)?;
 
-    tokens.consume().unwrap(); // consume 'func' token
     let (return_type, func_name) = match tokens.peek_curr() {
         Some(Token::T_INT) | Some(Token::T_STRING) | Some(Token::T_FLOAT) | Some(Token::T_BOOL) => {
             // Explicit return type provided
@@ -414,16 +414,25 @@ fn parse_function_statement(tokens: &mut TokenIterator) -> Result<FunctionStatem
     // closing parenthesis
     tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
 
+    // { block start
+    tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
+
+    let block = parse_block(tokens)?;
+
+    // } block end
+    tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
+
     Ok(FunctionStatement {
         return_type,
         identifier: func_name,
         parameters,
-        block: Block{}
+        block,
     })
 }
 
-// fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
-// }
+fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
+    return Ok(Block{}); // TODO
+}
 
 
 pub fn parser(tokens: Vec<Token>) -> RootList {
