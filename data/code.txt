@@ -20,11 +20,11 @@
 #    return x;
 #}
 
-string my_str = "h\"m\"; ()\\\"m";
-float my_val = 6.9;
-int lol = 5;
-int other = lol;
-bool my_bool = lol == 40;
-int my_int = lol + (lol*5 - (lol+2));
-int other_int = a * b^2 + c / d - 4;
-fn my_fn(int x, float y) {}
+fn my_fn(int x, float y) {
+    float my_val = 6.9;
+    int lol = 5;
+    int other = lol;
+    bool my_bool = lol == 40;
+    int my_int = lol + (x*5 - (lol+2));
+    int other_int = a * b^2 + c / d - 4;
+}

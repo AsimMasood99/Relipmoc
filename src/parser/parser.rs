@@ -431,7 +431,21 @@ fn parse_function_statement(tokens: &mut TokenIterator) -> Result<FunctionStatem
 }
 
 fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
-    return Ok(Block{}); // TODO
+    let mut statements = Vec::new();
+
+    while let Some(token) = tokens.peek_curr() {
+        match token {
+            Token::T_INT | Token::T_FLOAT | Token::T_BOOL | Token::T_STRING => {
+                let var_decl = parse_variable_declaration(tokens)?;
+                statements.push(Statement::VarDecl(var_decl));
+            }
+            // TODO: handle other statements like if, while, return, etc.
+            Token::T_CURLY_BRACKET_CLOSE => break, // End of block
+            other => return Err(Errors::UnexpectedToken(other.clone())),
+        }
+    }
+    
+    Ok(Block { statements })
 }
 
 

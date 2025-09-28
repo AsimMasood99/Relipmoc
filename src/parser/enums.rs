@@ -46,13 +46,25 @@ pub struct Parameter{
 }
 
 #[derive(Debug)]
-pub struct Block{
-}
-
-#[derive(Debug)]
 pub struct FunctionStatement{
     pub return_type: Token,
     pub identifier: String,
     pub parameters: Vec<Parameter>,
     pub block: Block,
+}
+
+#[derive(Debug)]
+pub struct Block{
+    pub statements: Vec<Statement>,
+}
+
+#[derive(Debug)]
+pub enum Statement{
+    VarDecl(VariableDeclaration),
+    Expr(Expression),
+    //Return(Expression),
+    //If(IfStatement),
+    // While(WhileStatement),
+    // For(ForStatement),
+    // Function(FunctionStatement),
 }
