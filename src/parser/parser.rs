@@ -443,6 +443,10 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let if_stmt = parse_if_statement(tokens)?;
                 statements.push(Statement::If(if_stmt));
             }
+            Token::T_FOR => {
+                let for_stmt = parse_for_statement(tokens)?;
+                statements.push(Statement::For(for_stmt));
+            }
             // TODO: handle other statements like if, while, return, etc.
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
             other => return Err(Errors::UnexpectedToken(other.clone())),
@@ -534,6 +538,55 @@ fn parse_else_block(tokens: &mut TokenIterator) -> Result<Option<Block>, Errors>
     } else {
         Ok(None)
     }
+}
+
+fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Errors> {
+    tokens.consume()?; // consume 'for'
+
+    // consume '('
+    tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
+    
+    // Parse init_loop_var (variable declaration or empty semicolon)
+    let init_var = match tokens.peek_curr() {
+        Some(Token::T_SEMICOLON) => {
+            tokens.consume()?; // consume semicolon
+            None // empty initialization
+        } // Otherwise parse variable declaration. 
+        Some(Token::T_INT) | Some(Token::T_FLOAT) | Some(Token::T_BOOL) | Some(Token::T_STRING) => {
+            let var_decl = parse_variable_declaration(tokens)?;
+            Some(var_decl)
+        }
+        other => return Err(Errors::UnexpectedToken(
+            other.cloned().unwrap_or(Token::T_SEMICOLON)
+        )),
+    };
+    
+    // Parse loop_condition: 
+    let condition = if let Some(Token::T_SEMICOLON) = tokens.peek_curr() {
+        tokens.consume()?; // consume semicolon
+        None // empty condition
+    } else { // Else parse condition expressin 
+        let expr = parse_expression(tokens)?;
+        tokens.seek_if(Token::T_SEMICOLON)?;
+        Some(expr)
+    };
+    
+    let update = if let Some(Token::T_ROUND_BRACKET_CLOSE) = tokens.peek_curr() {
+        None //no update. 
+    } else {
+        Some(parse_expression(tokens)?)
+    };
+    
+    tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
+    
+    let block = parse_block(tokens)?;
+    
+    Ok(ForStatement {
+        init_var,
+        condition,
+        update,
+        block,
+    })
 }
 
 pub fn parser(tokens: Vec<Token>) -> RootList {
