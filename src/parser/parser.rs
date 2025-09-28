@@ -443,6 +443,10 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let if_stmt = parse_if_statement(tokens)?;
                 statements.push(Statement::If(if_stmt));
             }
+            Token::T_WHILE => {
+                let while_stmt = while_loop_parser(tokens)?;
+                statements.push(Statement::While(while_stmt));
+            }
             // TODO: handle other statements like if, while, return, etc.
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
             other => return Err(Errors::UnexpectedToken(other.clone())),
@@ -587,8 +591,6 @@ pub fn parse_function_arguments(tokens: &mut TokenIterator) -> Result<Vec<Functi
 
     Ok(args)
 }
-
-
 
 pub fn parser(tokens: Vec<Token>) -> RootList {
     let mut token_iterator = TokenIterator::new(tokens);
