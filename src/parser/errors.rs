@@ -12,4 +12,5 @@ pub enum Errors{
     ExpectedStringLit,
     ExpectedBoolLit,
     ExpectedExpr,
+    InvalidAssignmentTarget,
 }

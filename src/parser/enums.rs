@@ -16,12 +16,6 @@ pub struct VariableDeclaration{ // for declaration of variables
 }
 
 #[derive(Debug)]
-pub struct AssignmentStatement{
-    pub identifier: String,
-    pub expression: Expression,
-}
-
-#[derive(Debug)]
 pub enum Expression{
     Literal(Constants),
     Identifier(String),
@@ -33,6 +27,10 @@ pub enum Expression{
     UnaryOperation{ // like -5 or !abc // an operator followed by an expression
         operator: Token,
         expression: Box<Expression>,
+    },
+    Assignment {
+        left: Box<Expression>,
+        right: Box<Expression>,
     },
     FunctionCall(FunctionCallStatement),
 }
@@ -78,7 +76,6 @@ pub enum Statement{
     If(IfStatement),
     While(WhileStatement),
     For(ForStatement),
-    Assignment(AssignmentStatement),
 }
 
 #[derive(Debug)]
@@ -105,6 +102,6 @@ pub struct WhileStatement {
 pub struct ForStatement {
     pub init_var: Option<VariableDeclaration>,
     pub condition: Option<Expression>,
-    pub update: Option<AssignmentStatement>,
+    pub update: Option<Expression>,
     pub block: Block,
 }

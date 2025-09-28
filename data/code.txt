@@ -19,6 +19,10 @@ fn int my_fn(int x, float y) {
         print("while running");
     }
 
+    for (int i=5; i<10; i=i+1) {
+        print(i);
+    }
+
     int new_val = 5 + shifted; #5 shifted one bit added to 5... comment :D
     print(new_val);
 
