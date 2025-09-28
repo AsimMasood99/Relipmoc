@@ -1,7 +1,7 @@
 **root-list**            -> root | root root-list<br>
 **root**                 -> variable-declaration | function-statement
 
-**variable-declaration**    -> type T_IDENTIFIER T_ASSIGNMENT_OPR expression-statement<br>
+**variable-declaration**    -> type T_IDENTIFIER T_ASSIGNMENT_OPR expression T_SEMICOLON<br>
 
 **function-statement**    -> T_FUNCTION function-type T_IDENTIFIER T_ROUND_BRACKET_OPEN params T_ROUND_BRACKET_CLOSE block<br>
 **function-type**       -> type | T_VOID<br>
@@ -12,12 +12,14 @@
 
 **block**                -> T_CURLY_BRACKET_OPEN statements T_CURLY_BRACKET_CLOSE<br>
 **statements**                -> statement statements | ε<br>
-**statement**                 -> for-statement | if-statement | return-statement | variable-declaration | expression-statement
+**statement**                 -> for-statement | if-statement | while-statement | return-statement | variable-declaration | expression T_SEMICOLON
 
 **for-statement**             -> T_FOR T_ROUND_BRACKET_OPEN init_loop_var loop_condition update_loop_var T_ROUND_BRACKET_CLOSE block<br>
-**init_loop_var**                 -> variable-declaration | T_SEMICOLON<br>
-**loop_condition**                 -> expression-statement<br>
-**update_loop_var**                 -> expr | ε
+**init_loop_var**                 -> variable-declaration | ε<br>
+**loop_condition**                 -> expression | ε<br>
+**update_loop_var**                 -> expression | ε
+
+**while-statement**            -> T_WHILE T_ROUND_BRACKET_OPEN expression T_ROUND_BRACKET_CLOSE block
 
 **if-statement**              -> T_IF if-statement-expr elif-statement else-statement
 
@@ -25,15 +27,13 @@
 
 **else-statement**        -> T_ELSE block | ε
 
-**if-statement-expr**     -> T_ROUND_BRACKET_OPEN expr T_ROUND_BRACKET_CLOSE block
+**if-statement-expr**     -> T_ROUND_BRACKET_OPEN expression T_ROUND_BRACKET_CLOSE block
 
-**return-statement**             -> T_RETURN expression-statement
+**return-statement**             -> T_RETURN expression T_SEMICOLON
 
-**break-statement**           -> T_BREAK
+**expression**            -> assignment-expression
 
-**expression-statement**            -> assign-expression T_SEMICOLON | T_SEMICOLON<br>
-
-**assign-expression**          -> bool-expression | bool-expression T_ASSIGNMENT_OPR assign-expression
+**assignment-expression**          -> bool-expression | bool-expression T_ASSIGNMENT_OPR assignment-expression
 
 **bool-expression**            -> bitwise-or-expression | bool-expression bool-op bitwise-or-expression<br>
 **bool-op**              -> T_OR_OPR | T_AND_OPR
@@ -51,17 +51,15 @@
 **add-expression**             -> mul-expression | add-expression add-op mul-expression<br>
 **add-op**               -> T_PLUS_OPR | T_MINUS_OPR
 
-**mul-expression** -> unary-expression | mul-expression mul-op unary-expression<br>
+**mul-expression** -> exp-expression | mul-expression mul-op exp-expression<br>
 **mul-op**               -> T_MULTIPLY_OPR | T_DIVIDE_OPR | T_MODULO_OPR
 
-**exp-expression**             -> unary-expression | unary-expression T_MULTIPLY_OPR exp-expression
+**exp-expression**             -> unary-expression | unary-expression T_POWER_OPR exp-expression
 
 **unary-expression**           -> primary | unary-op unary-expression<br>
-**unary-op**             -> T_MINUS_OPR | T_NOT
+**unary-op**             -> T_MINUS_OPR | T_NOT_OPR
 
-**primary**              -> T_CONST_INT | T_CONST_FLOAT | T_STRINGLIT | bool-literal | T_IDENTIFIER | T_ROUND_BRACKET_OPEN expr T_ROUND_BRACKET_CLOSE | function-call<br>
-
-**bool-literal**             -> T_CONST_BOOL
+**primary**              -> T_CONST_INT | T_CONST_FLOAT | T_STRINGLIT | T_CONST_BOOL | T_IDENTIFIER | T_ROUND_BRACKET_OPEN expression T_ROUND_BRACKET_CLOSE | function-call<br>
 
 **function-call**              -> T_IDENTIFIER T_ROUND_BRACKET_OPEN function-args T_ROUND_BRACKET_CLOSE<br>
-**function-args**              -> expr | expr T_COMMA function-args | ε
+**function-args**              -> expression | expression T_COMMA function-args | ε
