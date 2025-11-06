@@ -1,8 +1,10 @@
 use std::fs;
 use std::path::Path;
+use std::thread::scope;
 
 mod lexer;
 mod parser;
+mod semantics;
 
 fn get_code() -> String {
     // TODO: allow custom file path
@@ -27,4 +29,6 @@ fn main() {
     let ast = parser::parser::parser(tokens);
 
     println!("{:#?}\n\n", ast);
+
+    let res = semantics::scope_checking::scope_checking(ast);
 }
