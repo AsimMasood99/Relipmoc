@@ -494,6 +494,12 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
             _ => {
                 // Try parsing as an expression statement (e.g., function call)
                 let expr = parse_expression(tokens)?;
+
+                // check semicolon after expr
+                // not checked in parse_expression because expression can be in middle
+                // of if or while etc where semicolon is not needed
+                tokens.seek_if(Token::T_SEMICOLON)?; 
+
                 statements.push(Statement::Expr(expr));
             }
         }
@@ -709,7 +715,6 @@ pub fn parse_function_call(tokens: &mut TokenIterator) -> Result<FunctionCallSta
     let args = parse_function_call_arguments(tokens)?;
 
     tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
-    tokens.seek_if(Token::T_SEMICOLON)?;
 
     Ok(FunctionCallStatement {
         identifier: func_name,
