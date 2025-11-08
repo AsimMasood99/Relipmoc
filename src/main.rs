@@ -31,4 +31,10 @@ fn main() {
     println!("{:#?}\n\n", ast);
 
     let res = semantics::scope_checking::scope_checking(ast);
+
+    match res
+    {
+        Ok(_) => println!("Scope Analysis Complete No Errors Located!"),
+        Err(_) => println!("Fix Above Scope Errors and Try Again To Resume Compilation!"),
+    }
 }
