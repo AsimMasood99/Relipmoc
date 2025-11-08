@@ -1,3 +1,7 @@
+fn print(string str) {
+    str = str ;
+}
+
 fn int my_fn(int x, float y) {
     string my_str = "h\"m\"; ()\\\"m";
     bool my_bool = x == 40;

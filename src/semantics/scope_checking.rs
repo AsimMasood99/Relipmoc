@@ -333,24 +333,19 @@ impl ScopeAnalyzer
 
     fn analyze_function_call(&mut self, func_call: &FunctionCallStatement) 
     {
-        // Skipping for built-in functions
-        let builtins = vec!["print"];
         
-        if !builtins.contains(&func_call.identifier.as_str()) 
+        // Check declaration
+        if let Some(symbol) = self.lookup_symbol(&func_call.identifier) 
         {
-            // Check declaration
-            if let Some(symbol) = self.lookup_symbol(&func_call.identifier) 
+            // Check symbol type
+            if matches!(symbol.symbol_type, SymbolType::Variable(_)) 
             {
-                // Check symbol type
-                if matches!(symbol.symbol_type, SymbolType::Variable(_)) 
-                {
-                    self.errors.push(format!("'{}' is a variable, not a function", func_call.identifier));
-                }
-            } 
-            else 
-            {
-                self.errors.push(format!("Function '{}' is not defined", func_call.identifier));
+                self.errors.push(format!("'{}' is a variable, not a function", func_call.identifier));
             }
+        } 
+        else 
+        {
+            self.errors.push(format!("Function '{}' is not defined", func_call.identifier));
         }
 
         // Checking arguments
