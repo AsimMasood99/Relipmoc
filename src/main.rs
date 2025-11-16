@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use std::process::exit;
 
 mod lexer;
 mod parser;
@@ -12,7 +13,7 @@ fn get_code() -> String {
     // io::stdout().flush().unwrap(); // flush to print on screen
     // io::stdin().read_line(&mut file_name).unwrap();
 
-    let path = Path::new("data").join("code.txt");
+    let path = Path::new("data").join("code1.txt");
     let file_content = fs::read_to_string(path).unwrap();
 
     return file_content;
@@ -29,11 +30,8 @@ fn main() {
 
     println!("{:#?}\n\n", ast);
 
-    let res = semantics::scope_checking::scope_checking(ast);
-
-    match res
-    {
-        Ok(_) => println!("Scope Analysis Complete No Errors Located!"),
-        Err(_) => println!("Fix Above Scope Errors and Try Again To Resume Compilation!"),
+    match semantics::semantic_analysis::semantic_analysis(ast) {
+        Ok(_) => {},
+        Err(_) => exit(1),
     }
 }

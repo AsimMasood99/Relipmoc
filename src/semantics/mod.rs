@@ -1,1 +1,1 @@
-pub mod scope_checking;
+pub mod semantic_analysis;

@@ -1,34 +1,109 @@
-fn int my_fn(int x, float y) {
-    string my_str = "h\"m\"; ()\\\"m";
-    bool my_bool = x == 40;
-    bool my_other_bool = x != 5 && x <= 10;
-    int shifted = 5 << 1;
-    float my_val = 6.9;
+# Test cases for type checking
 
-    # very nice if condition :^)
-    if (my_val + 5 >= 10) {
-        print("yes");
-    } elif (my_val + 5 < 10) {
-        print("no");
-    } else {
-        print("unfortuante");
+# Valid function with proper types
+fn int add_numbers(int x, float y) {
+    int result = x;
+    float sum = x + y;  # int + float = float (compatible)
+    bool is_positive = sum > 0;  # comparison returns bool
+    
+    # Valid if condition (boolean)
+    if (is_positive) {
+        int temp = 5;
     }
-
-    while (x < 5)
-    {
-        print("while running");
+    
+    # Valid while with boolean condition
+    while (x < 10) {
+        x = x + 1;
     }
-
-    for (int i=5; i<10; i=i+1) {
-        print(i);
+    
+    # Valid for loop
+    for (int i=0; i<10; i=i+1) {
+        int j = i;
     }
-
-    int new_val = 5 + shifted; #5 shifted one bit added to 5... comment :D
-    print(new_val);
-
-    return x;
+    
+    return x;  # returns int, matches function return type
 }
 
-fn int a(int x, int y) {
-    return x + y;
+fn test_var_decl_error() {
+    int x = 5.5;
+    bool b = 10;  # ERROR: assigning int to bool variable
+    string s = true;  # ERROR: assigning bool to string variable
+}
+
+fn int wrong_return_type() {
+    return 3.14;
+}
+
+fn bool another_wrong_return() {
+    return 42;  # ERROR: returning int when function expects bool
+}
+
+# Test: Invalid condition types in control structures
+fn test_conditions() {
+    int x = 5;
+    
+    if (x) {  # ERROR: if condition must be boolean, not int
+        int y = 1;
+    }
+    
+    while (3.14) {  # ERROR: while condition must be boolean, not float
+        int z = 2;
+    }
+    
+    for (int i=0; "hello"; i=i+1) {  # ERROR: for condition must be boolean, not string
+        int k = 3;
+    }
+}
+
+# Test: Type mismatches in binary operations
+fn test_operations() {
+    int a = 5 + "hello";  # ERROR: cannot add int and string
+    bool b = true * false;  # ERROR: cannot multiply booleans
+    string s = "hello" - "world";
+}
+
+# Test: Logical operators with non-boolean operands
+fn test_logical_ops() {
+    bool result1 = 5 && 10;  # ERROR: logical AND requires boolean operands
+    bool result2 = 3.14 || 2.71;  # ERROR: logical OR requires boolean operands
+    bool result3 = true && 5;  # ERROR: right operand must be boolean
+}
+
+# Test: Unary operator type errors
+fn test_unary_ops() {
+    int neg = -true;  # ERROR: unary minus requires numeric type
+    bool not_val = !5;  # ERROR: logical NOT requires boolean type
+}
+
+# Test: Function call with wrong argument types
+fn int func_with_params(int a, float b, bool c) {
+    return a;
+}
+
+fn test_function_calls() {
+    int r1 = func_with_params(5, 3.14, true);  # Valid call
+    int r2 = func_with_params(true, 5, 3.14);  # ERROR: all argument types wrong
+    int r3 = func_with_params(5);  # ERROR: wrong number of arguments
+}
+
+# Test: Assignment type checking
+fn test_assignments() {
+    int x = 5;
+    float y = 3.14;
+    x = y;
+    y = x;  # Valid: int can be assigned to float (compatible)
+}
+
+# Test: Bitwise operations with wrong types
+fn test_bitwise() {
+    int a = 5 << 3.14;  # ERROR: shift requires int operands
+    int b = true >> 2;  # ERROR: shift requires int operands
+}
+
+# Valid mixed operations (int and float are compatible)
+fn float test_compatible_types(int x) {
+    float result = x + 5.5;  # Valid: int + float = float
+    int y = 10;
+    float z = y;  # Valid: int can be used where float is expected
+    return result;
 }
