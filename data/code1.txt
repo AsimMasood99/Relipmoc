@@ -107,3 +107,38 @@ fn float test_compatible_types(int x) {
     float z = y;  # Valid: int can be used where float is expected
     return result;
 }
+
+# Test: Missing return in non-void function
+fn int missing_return(int x) {
+    int y = x + 5;
+    # ERROR: Non-void function must have a return statement
+}
+
+# Test: Void function (no return required)
+fn valid_void_function(int x) {
+    int y = x + 10;
+    # No return needed for void functions
+}
+
+# Test: Non-void function without return in some branch
+fn int conditional_missing_return(bool condition) {
+    if (condition) {
+        return 1;
+    }
+    # ERROR: Missing return in else path (not all branches return)
+}
+
+# Test: All branches return (valid)
+fn int all_branches_return(bool condition) {
+    if (condition) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+fn int while_ret() {
+    while (true) {
+        return 1;
+    }
+}

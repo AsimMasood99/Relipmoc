@@ -430,7 +430,8 @@ impl ScopeAnalyzer
         );
 
         // Set current function return type for return statement checking
-        self.current_function_return_type = Some(self.token_to_type(&func.return_type));
+        let func_return_type = self.token_to_type(&func.return_type);
+        self.current_function_return_type = Some(func_return_type.clone());
 
         // Add function scope and its params
         self.enter_scope();
@@ -449,8 +450,17 @@ impl ScopeAnalyzer
             );
         }
 
-        // Recursively analyze function body
-        self.analyze_block(&func.block);
+        // Recursively analyze function body and check for return statements
+        let has_return = self.block_has_return(&func.block);
+        
+        // Check if non-void function has a return statement
+        if func_return_type != Type::Void && !has_return {
+            self.errors.push(format!(
+                "Function '{}' with return type '{}' must have a return statement",
+                func.identifier,
+                func_return_type.to_string()
+            ));
+        }
 
         // Pop function scope
         self.exit_scope();
@@ -464,6 +474,39 @@ impl ScopeAnalyzer
         for statement in &block.statements
         {
             self.analyze_statement(statement);
+        }
+    }
+
+    // Helper to check if a block contains a return statement
+    fn block_has_return(&mut self, block: &Block) -> bool 
+    {
+        self.analyze_block(block);
+        block.statements.iter().any(|stmt| self.statement_has_return(stmt))
+    }
+
+    // Helper to check if a statement contains a return
+    fn statement_has_return(&self, statement: &Statement) -> bool 
+    {
+        match statement {
+            Statement::Return(_) => true,
+            Statement::If(if_stmt) => {
+                // An if statement guarantees a return only if all branches return
+                let if_returns = if_stmt.block.statements.iter().any(|s| self.statement_has_return(s));
+                
+                let all_elif_return = if_stmt.elif_blocks.iter().all(|elif| {
+                    elif.block.statements.iter().any(|s| self.statement_has_return(s))
+                });
+                
+                let else_returns = if let Some(else_block) = &if_stmt.else_block {
+                    else_block.statements.iter().any(|s| self.statement_has_return(s))
+                } else {
+                    false
+                };
+                
+                // Only if we have if, all elifs, and else all returning
+                if_returns && all_elif_return && else_returns && if_stmt.else_block.is_some()
+            }
+            _ => false, // while and for loops do not guarantee return (never run), so error on them
         }
     }
 
