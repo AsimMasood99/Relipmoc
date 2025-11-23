@@ -2,6 +2,7 @@ use std::fs;
 use std::path::Path;
 use std::process::exit;
 
+mod ir;
 mod lexer;
 mod parser;
 mod semantics;
@@ -29,8 +30,10 @@ fn main() {
 
     println!("{:#?}\n\n", ast);
 
-    match semantics::semantic_analysis::semantic_analysis(ast) {
+    match semantics::semantic_analysis::semantic_analysis(&ast) {
         Ok(_) => {}
         Err(_) => exit(1),
     }
+
+    ir::ir::ir(&ast).unwrap();
 }

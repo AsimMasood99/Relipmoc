@@ -798,9 +798,9 @@ impl ScopeAnalyzer {
 }
 
 // Main
-pub fn semantic_analysis(ast: RootList) -> Result<(), Vec<String>> {
+pub fn semantic_analysis(ast: &RootList) -> Result<(), Vec<String>> {
     let mut analyzer = ScopeAnalyzer::new();
-    analyzer.analyze(&ast);
+    analyzer.analyze(ast);
 
     if analyzer.is_valid() {
         println!("Scope and type analysis passed!");
