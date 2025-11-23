@@ -8,7 +8,8 @@ pub enum Token {
     T_WHILE,    // while
     T_FOR,      // for
     T_RETURN,   // return
-    //T_PRINT, // print
+    T_BREAK,    // break
+    T_CONTINUE, // continue
     T_IDENTIFIER(String),
     T_STRINGLIT(String),
     T_CONST_INT(i64),
@@ -22,8 +23,7 @@ pub enum Token {
     T_CURLY_BRACKET_OPEN,   // {
     T_CURLY_BRACKET_CLOSE,  // }
 
-    T_COMMA, // ,
-    //T_DOT, // .
+    T_COMMA,        // ,
     T_SEMICOLON,    // ;
     T_DOUBLE_QUOTE, // "
 

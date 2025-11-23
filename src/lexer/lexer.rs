@@ -83,11 +83,11 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
             tokens.push(T_FOR);
         } else if substr == "return" {
             tokens.push(T_RETURN);
-        }
-        // else if substr == "print" {
-        //     tokens.push(T_PRINT);
-        // }
-        else if substr == "int" {
+        } else if substr == "break" {
+            tokens.push(T_BREAK);
+        } else if substr == "continue" {
+            tokens.push(T_CONTINUE);
+        } else if substr == "int" {
             tokens.push(T_INT);
         } else if substr == "float" {
             tokens.push(T_FLOAT);
@@ -112,11 +112,7 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
             tokens.push(T_CURLY_BRACKET_CLOSE);
         } else if substr == "," {
             tokens.push(T_COMMA);
-        }
-        // else if substr == "." {
-        //     tokens.push(T_DOT);
-        // }
-        else if substr == ";" {
+        } else if substr == ";" {
             tokens.push(T_SEMICOLON);
         } else if substr == "=" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == "==" {

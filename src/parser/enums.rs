@@ -76,6 +76,8 @@ pub enum Statement {
     VarDecl(VariableDeclaration),
     Expr(Expression),
     Return(Expression),
+    Break,
+    Continue,
     If(IfStatement),
     While(WhileStatement),
     For(ForStatement),

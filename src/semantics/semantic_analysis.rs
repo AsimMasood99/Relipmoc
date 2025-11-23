@@ -129,6 +129,7 @@ pub struct ScopeAnalyzer {
     scopes: Vec<Scope>, //Is Spaghetti stack of scopes
     errors: Vec<String>,
     current_function_return_type: Option<Type>, // Track current function's return type
+    loop_depth: usize,                          // Track if we're inside a loop
 }
 
 impl ScopeAnalyzer {
@@ -137,6 +138,7 @@ impl ScopeAnalyzer {
             scopes: vec![Scope::new()], // 0th index is Global Scope
             errors: Vec::new(),
             current_function_return_type: None,
+            loop_depth: 0,
         }
     }
 
@@ -548,6 +550,18 @@ impl ScopeAnalyzer {
                     }
                 }
             }
+            Statement::Break => {
+                if self.loop_depth == 0 {
+                    self.errors
+                        .push("'break' statement must be inside a loop".to_string());
+                }
+            }
+            Statement::Continue => {
+                if self.loop_depth == 0 {
+                    self.errors
+                        .push("'continue' statement must be inside a loop".to_string());
+                }
+            }
             Statement::If(if_stmt) => {
                 self.analyze_if_statement(if_stmt);
             }
@@ -710,7 +724,9 @@ impl ScopeAnalyzer {
         }
 
         self.enter_scope();
+        self.loop_depth += 1;
         self.analyze_block(&while_stmt.block);
+        self.loop_depth -= 1;
         self.exit_scope();
     }
 
@@ -765,7 +781,9 @@ impl ScopeAnalyzer {
         }
 
         // Analyze block
+        self.loop_depth += 1;
         self.analyze_block(&for_stmt.block);
+        self.loop_depth -= 1;
 
         self.exit_scope();
     }

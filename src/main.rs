@@ -13,7 +13,7 @@ fn get_code() -> String {
     // io::stdout().flush().unwrap(); // flush to print on screen
     // io::stdin().read_line(&mut file_name).unwrap();
 
-    let path = Path::new("data").join("code1.txt");
+    let path = Path::new("data").join("code.txt");
     let file_content = fs::read_to_string(path).unwrap();
 
     return file_content;

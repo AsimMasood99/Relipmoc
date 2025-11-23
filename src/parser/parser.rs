@@ -482,6 +482,16 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 let ret_stmt = parse_return_statement(tokens)?;
                 statements.push(Statement::Return(ret_stmt));
             }
+            Token::T_BREAK => {
+                tokens.consume()?; // consume 'break'
+                tokens.seek_if(Token::T_SEMICOLON)?; // consume ';'
+                statements.push(Statement::Break);
+            }
+            Token::T_CONTINUE => {
+                tokens.consume()?; // consume 'continue'
+                tokens.seek_if(Token::T_SEMICOLON)?; // consume ';'
+                statements.push(Statement::Continue);
+            }
             Token::T_CURLY_BRACKET_CLOSE => break, // End of block
             _ => {
                 // Try parsing as an expression statement (e.g., function call)
