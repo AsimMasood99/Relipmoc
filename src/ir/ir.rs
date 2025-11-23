@@ -88,8 +88,8 @@ impl<'ctx> codegen<'ctx> {
         Ok(())
     }
 
-    fn gen_ir_function(&self) {
-        // Implement function IR generation logic here
+    fn gen_ir_function(&self, dunc_decl: &FunctionStatement) -> Result<(), ()> {
+        Ok(())
     }
 
     pub fn generate_ir(&mut self, ast: &RootList) -> Result<String, ()> {
