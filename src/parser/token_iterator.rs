@@ -31,7 +31,10 @@ impl TokenIterator {
     }
 
     pub fn consume(&mut self) -> Result<&Token, Errors> {
-        let token = self.stream.get(self.position).ok_or(Errors::UnexpectedEOF)?;
+        let token = self
+            .stream
+            .get(self.position)
+            .ok_or(Errors::UnexpectedEOF)?;
         self.position += 1;
         Ok(token)
     }
@@ -41,6 +44,9 @@ impl TokenIterator {
     }
 
     pub fn new(stream: Vec<Token>) -> Self {
-        TokenIterator { position: 0, stream }
+        TokenIterator {
+            position: 0,
+            stream,
+        }
     }
 }

@@ -1,7 +1,7 @@
-use crate::parser::enums::{*};
 use crate::lexer::tokens::Token;
-use crate::parser::token_iterator::TokenIterator;
+use crate::parser::enums::*;
 use crate::parser::errors::Errors;
+use crate::parser::token_iterator::TokenIterator;
 
 fn parse_expression(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     parse_assignment(tokens)
@@ -9,11 +9,11 @@ fn parse_expression(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
 
 fn parse_assignment(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let expr = parse_logical_or(tokens)?;
-    
+
     if let Some(Token::T_ASSIGNMENT_OPR) = tokens.peek_curr() {
         tokens.consume()?;
         let right = parse_assignment(tokens)?;
-        
+
         // Ensure left side is an identifier for assignment
         if let Expression::Identifier(_) = expr {
             return Ok(Expression::Assignment {
@@ -24,13 +24,13 @@ fn parse_assignment(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             return Err(Errors::InvalidAssignmentTarget);
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_logical_or(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_logical_and(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_OR_OPR => {
@@ -45,13 +45,13 @@ fn parse_logical_or(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_logical_and(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_equality(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_AND_OPR => {
@@ -66,13 +66,13 @@ fn parse_logical_and(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_equality(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_comparison(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_EQUALS_OPR => {
@@ -96,13 +96,13 @@ fn parse_equality(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_comparison(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_shift(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_GREATER_THAN_OPR => {
@@ -144,13 +144,13 @@ fn parse_comparison(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_shift(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_term(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_LEFT_SHIFT_OPR => {
@@ -174,13 +174,13 @@ fn parse_shift(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_term(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_factor(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_PLUS_OPR => {
@@ -204,13 +204,13 @@ fn parse_term(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_factor(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_exponential(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_MULTIPLY_OPR => {
@@ -234,13 +234,13 @@ fn parse_factor(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
 fn parse_exponential(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let mut expr = parse_unary(tokens)?;
-    
+
     while let Some(token) = tokens.peek_curr() {
         match token {
             Token::T_EXPONENT_OPR => {
@@ -255,7 +255,7 @@ fn parse_exponential(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => break,
         }
     }
-    
+
     Ok(expr)
 }
 
@@ -273,7 +273,7 @@ fn parse_unary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             _ => {}
         }
     }
-    
+
     parse_primary(tokens)
 }
 
@@ -297,12 +297,8 @@ fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
     let current = tokens.consume()?;
 
     match current {
-        Token::T_CONST_INT(value) => {
-            Ok(Expression::Literal(Constants::Int(value.clone())))
-        }
-        Token::T_CONST_FLOAT(value) => {
-            Ok(Expression::Literal(Constants::Float(value.clone())))
-        }
+        Token::T_CONST_INT(value) => Ok(Expression::Literal(Constants::Int(value.clone()))),
+        Token::T_CONST_FLOAT(value) => Ok(Expression::Literal(Constants::Float(value.clone()))),
         Token::T_DOUBLE_QUOTE => {
             let value = match tokens.consume()? {
                 Token::T_STRINGLIT(s) => s.clone(),
@@ -311,9 +307,7 @@ fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
             tokens.seek_if(Token::T_DOUBLE_QUOTE)?;
             Ok(Expression::Literal(Constants::Str(value.clone())))
         }
-        Token::T_CONST_BOOL(value) => {
-            Ok(Expression::Literal(Constants::Bool(value.clone())))
-        }
+        Token::T_CONST_BOOL(value) => Ok(Expression::Literal(Constants::Bool(value.clone()))),
         Token::T_ROUND_BRACKET_OPEN => {
             let expr = parse_expression(tokens)?;
             tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
@@ -325,7 +319,6 @@ fn parse_primary(tokens: &mut TokenIterator) -> Result<Expression, Errors> {
 }
 
 fn parse_variable_declaration(tokens: &mut TokenIterator) -> Result<VariableDeclaration, Errors> {
-
     // type like int, float, bool, string
     let var_type = match tokens.consume()? {
         Token::T_INT => Token::T_INT,
@@ -338,7 +331,7 @@ fn parse_variable_declaration(tokens: &mut TokenIterator) -> Result<VariableDecl
     // identifier the name of the variable
     let var_identifier = match tokens.consume()? {
         Token::T_IDENTIFIER(name) => name.clone(), // matching and if it matched copy (clone) the name
-        other => return Err(Errors::ExpectedIdentifier(other.clone())) // no match: send error
+        other => return Err(Errors::ExpectedIdentifier(other.clone())), // no match: send error
     };
 
     // '=' token
@@ -357,7 +350,6 @@ fn parse_variable_declaration(tokens: &mut TokenIterator) -> Result<VariableDecl
 }
 
 fn parse_parameter(tokens: &mut TokenIterator) -> Result<Parameter, Errors> {
-
     let param_type = match tokens.consume()? {
         Token::T_INT => Token::T_INT,
         Token::T_STRING => Token::T_STRING,
@@ -368,8 +360,8 @@ fn parse_parameter(tokens: &mut TokenIterator) -> Result<Parameter, Errors> {
 
     // identifier the name of the variable
     let param_identifier = match tokens.consume()? {
-        Token::T_IDENTIFIER(name) => name.clone(), 
-        other => return Err(Errors::ExpectedIdentifier(other.clone()))
+        Token::T_IDENTIFIER(name) => name.clone(),
+        other => return Err(Errors::ExpectedIdentifier(other.clone())),
     };
 
     Ok(Parameter {
@@ -414,13 +406,13 @@ fn parse_function_statement(tokens: &mut TokenIterator) -> Result<FunctionStatem
                 Token::T_BOOL => Token::T_BOOL,
                 other => return Err(Errors::ExpectedTypeToken(other.clone())),
             };
-            
+
             // function name
             let name = match tokens.consume()? {
                 Token::T_IDENTIFIER(name) => name.clone(),
                 other => return Err(Errors::ExpectedIdentifier(other.clone())),
             };
-            
+
             (ret_type, name)
         }
         Some(Token::T_IDENTIFIER(_)) => {
@@ -428,7 +420,7 @@ fn parse_function_statement(tokens: &mut TokenIterator) -> Result<FunctionStatem
                 Token::T_IDENTIFIER(name) => name.clone(),
                 other => return Err(Errors::ExpectedIdentifier(other.clone())),
             };
-            
+
             (Token::T_VOID, name) // Default to void
         }
         other => {
@@ -498,42 +490,42 @@ fn parse_block(tokens: &mut TokenIterator) -> Result<Block, Errors> {
                 // check semicolon after expr
                 // not checked in parse_expression because expression can be in middle
                 // of if or while etc where semicolon is not needed
-                tokens.seek_if(Token::T_SEMICOLON)?; 
+                tokens.seek_if(Token::T_SEMICOLON)?;
 
                 statements.push(Statement::Expr(expr));
             }
         }
     }
-    
+
     Ok(Block { statements })
 }
 
 fn parse_if_statement(tokens: &mut TokenIterator) -> Result<IfStatement, Errors> {
     tokens.seek_if(Token::T_IF)?;
-    
+
     // opening bracket
     tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
-    
+
     // condition expression
     let condition = parse_expression(tokens)?;
-    
+
     // closing bracket
     tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
-    
+
     // { block start
     tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
-    
+
     let block = parse_block(tokens)?;
-    
+
     // } block end
     tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
-    
+
     // Parse optional elif blocks
     let elif_blocks = parse_elif_blocks(tokens)?;
-    
+
     // Parse optional else block
     let else_block = parse_else_block(tokens)?;
-    
+
     Ok(IfStatement {
         condition,
         block,
@@ -541,7 +533,6 @@ fn parse_if_statement(tokens: &mut TokenIterator) -> Result<IfStatement, Errors>
         else_block,
     })
 }
-
 
 fn while_loop_parser(tokens: &mut TokenIterator) -> Result<WhileStatement, Errors> {
     tokens.seek_if(Token::T_WHILE)?;
@@ -563,57 +554,53 @@ fn while_loop_parser(tokens: &mut TokenIterator) -> Result<WhileStatement, Error
     // } block end
     tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
 
-    Ok(WhileStatement {
-        condition,
-        block,
-    })
-
+    Ok(WhileStatement { condition, block })
 }
 
 fn parse_elif_blocks(tokens: &mut TokenIterator) -> Result<Vec<ElifBlock>, Errors> {
     let mut elif_blocks = Vec::new();
-    
+
     while let Some(Token::T_ELSE_IF) = tokens.peek_curr() {
         tokens.consume()?; // consume ELIF
-        
+
         // opening bracket
         tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
-        
+
         // condition expression
         let elif_condition = parse_expression(tokens)?;
 
         // closing bracket
         tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
-        
+
         // { block start
         tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
-        
+
         let elif_block = parse_block(tokens)?;
-        
+
         // } block end
         tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
-        
+
         elif_blocks.push(ElifBlock {
             condition: elif_condition,
             block: elif_block,
         });
     }
-    
+
     Ok(elif_blocks)
 }
 
 fn parse_else_block(tokens: &mut TokenIterator) -> Result<Option<Block>, Errors> {
     if let Some(Token::T_ELSE) = tokens.peek_curr() {
         tokens.consume()?; // consume ELSE
-        
+
         // { block start
         tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
-        
+
         let block = parse_block(tokens)?;
-        
+
         // } block end
         tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
-        
+
         Ok(Some(block))
     } else {
         Ok(None)
@@ -625,47 +612,50 @@ fn parse_for_statement(tokens: &mut TokenIterator) -> Result<ForStatement, Error
 
     // consume '('
     tokens.seek_if(Token::T_ROUND_BRACKET_OPEN)?;
-    
+
     // Parse init_loop_var (variable declaration or empty semicolon)
     let init_var = match tokens.peek_curr() {
         Some(Token::T_SEMICOLON) => {
             tokens.consume()?; // consume semicolon
             None // empty initialization
-        } // Otherwise parse variable declaration. 
+        } // Otherwise parse variable declaration.
         Some(Token::T_INT) | Some(Token::T_FLOAT) | Some(Token::T_BOOL) | Some(Token::T_STRING) => {
             let var_decl = parse_variable_declaration(tokens)?;
             Some(var_decl)
         }
-        other => return Err(Errors::UnexpectedToken(
-            other.cloned().unwrap_or(Token::T_SEMICOLON)
-        )),
+        other => {
+            return Err(Errors::UnexpectedToken(
+                other.cloned().unwrap_or(Token::T_SEMICOLON),
+            ));
+        }
     };
-    
-    // Parse loop_condition: 
+
+    // Parse loop_condition:
     let condition = if let Some(Token::T_SEMICOLON) = tokens.peek_curr() {
         tokens.consume()?; // consume semicolon
         None // empty condition
-    } else { // Else parse condition expression 
+    } else {
+        // Else parse condition expression
         let expr = parse_expression(tokens)?;
         tokens.seek_if(Token::T_SEMICOLON)?;
         Some(expr)
     };
-    
+
     let update = if let Some(Token::T_ROUND_BRACKET_CLOSE) = tokens.peek_curr() {
         None //no update. 
     } else {
         Some(parse_expression(tokens)?)
     };
-    
+
     tokens.seek_if(Token::T_ROUND_BRACKET_CLOSE)?;
-    
+
     tokens.seek_if(Token::T_CURLY_BRACKET_OPEN)?;
-    
+
     let block = parse_block(tokens)?;
-    
+
     // Parse block closing
     tokens.seek_if(Token::T_CURLY_BRACKET_CLOSE)?;
-    
+
     Ok(ForStatement {
         init_var,
         condition,
@@ -681,7 +671,9 @@ fn parse_return_statement(tokens: &mut TokenIterator) -> Result<Expression, Erro
     Ok(expr)
 }
 
-pub fn parse_function_call_arguments(tokens: &mut TokenIterator) -> Result<Vec<Expression>, Errors> {
+pub fn parse_function_call_arguments(
+    tokens: &mut TokenIterator,
+) -> Result<Vec<Expression>, Errors> {
     let mut args = Vec::new();
 
     // if next token is ')', then no arguments
@@ -729,22 +721,21 @@ pub fn parser(tokens: Vec<Token>) -> RootList {
     while !token_iterator.is_at_end() {
         let current = token_iterator.peek_curr();
         match current {
-            Some(Token::T_INT) | Some(Token::T_FLOAT) | Some(Token::T_BOOL) | Some(Token::T_STRING) => {
-                match parse_variable_declaration(&mut token_iterator) {
-                    Ok(var_decl) => roots.push(Root::Var(var_decl)),
-                    Err(e) => {
-                        panic!("Error parsing variable declaration: {:?}", e);
-                    }
+            Some(Token::T_INT)
+            | Some(Token::T_FLOAT)
+            | Some(Token::T_BOOL)
+            | Some(Token::T_STRING) => match parse_variable_declaration(&mut token_iterator) {
+                Ok(var_decl) => roots.push(Root::Var(var_decl)),
+                Err(e) => {
+                    panic!("Error parsing variable declaration: {:?}", e);
                 }
-            }
-            Some(Token::T_FUNCTION) => {
-                match parse_function_statement(&mut token_iterator) {
-                    Ok(func_stmt) => roots.push(Root::Func(func_stmt)),
-                    Err(e) => {
-                        panic!("Error parsing function statement: {:?}", e);
-                    }
+            },
+            Some(Token::T_FUNCTION) => match parse_function_statement(&mut token_iterator) {
+                Ok(func_stmt) => roots.push(Root::Func(func_stmt)),
+                Err(e) => {
+                    panic!("Error parsing function statement: {:?}", e);
                 }
-            }
+            },
             Some(other) => {
                 panic!("Unexpected token: {:?}", other);
             }

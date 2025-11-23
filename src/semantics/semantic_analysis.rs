@@ -1,5 +1,5 @@
-use crate::parser::enums::{*};
 use crate::lexer::tokens::Token;
+use crate::parser::enums::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -37,13 +37,19 @@ impl Type {
 
     // Check if two types are compatible for operations
     fn is_compatible(&self, other: &Type) -> bool {
-        self == other || matches!((self, other), (Type::Int, Type::Float) | (Type::Float, Type::Int))
+        self == other
+            || matches!(
+                (self, other),
+                (Type::Int, Type::Float) | (Type::Float, Type::Int)
+            )
     }
 
     // Get the result type of a binary operation
     fn result_type(&self, other: &Type) -> Type {
         match (self, other) {
-            (Type::Float, Type::Int) | (Type::Int, Type::Float) | (Type::Float, Type::Float) => Type::Float,
+            (Type::Float, Type::Int) | (Type::Int, Type::Float) | (Type::Float, Type::Float) => {
+                Type::Float
+            }
             (Type::Int, Type::Int) => Type::Int,
             (Type::String, Type::String) => Type::String,
             (Type::Bool, Type::Bool) => Type::Bool,
@@ -53,61 +59,59 @@ impl Type {
 }
 
 #[derive(Debug, Clone)]
-pub enum SymbolType 
-{
+pub enum SymbolType {
     Variable(String), //Store type, will be useful for type checking later
-    Function 
-    {
+    Function {
         return_type: String,
         params: Vec<String>, // parameter types
     },
 }
 
 #[derive(Debug, Clone)]
-pub struct Symbol 
-{
+pub struct Symbol {
     pub name: String,
     pub symbol_type: SymbolType,
 }
 
-pub struct Scope 
-{
+pub struct Scope {
     symbols: HashMap<String, Symbol>, //Map identifiers to its Symbol Information
 }
 
-impl Scope 
-{
-    fn new() -> Self 
-    {
-        Scope 
-        {
+impl Scope {
+    fn new() -> Self {
+        Scope {
             symbols: HashMap::new(),
         }
     }
 
-    fn declare(&mut self, name: String, symbol: Symbol) -> Result<(), String> 
-    {
+    fn declare(&mut self, name: String, symbol: Symbol) -> Result<(), String> {
         // Checking if is redeclaration
-        if let Some(existing) = self.symbols.get(&name) 
-        {
+        if let Some(existing) = self.symbols.get(&name) {
             // Provide specific error based on what's being redeclared
-            match (&existing.symbol_type, &symbol.symbol_type) 
-            {
-                (SymbolType::Function { .. }, SymbolType::Function { .. }) => 
-                {
-                    return Err(format!("Function '{}' is already defined in this scope", name));
+            match (&existing.symbol_type, &symbol.symbol_type) {
+                (SymbolType::Function { .. }, SymbolType::Function { .. }) => {
+                    return Err(format!(
+                        "Function '{}' is already defined in this scope",
+                        name
+                    ));
                 }
-                (SymbolType::Variable(_), SymbolType::Variable(_)) => 
-                {
-                    return Err(format!("Variable '{}' is already declared in this scope", name));
+                (SymbolType::Variable(_), SymbolType::Variable(_)) => {
+                    return Err(format!(
+                        "Variable '{}' is already declared in this scope",
+                        name
+                    ));
                 }
-                (SymbolType::Function { .. }, SymbolType::Variable(_)) => 
-                {
-                    return Err(format!("'{}' is already defined as a function, cannot redeclare as variable", name));
+                (SymbolType::Function { .. }, SymbolType::Variable(_)) => {
+                    return Err(format!(
+                        "'{}' is already defined as a function, cannot redeclare as variable",
+                        name
+                    ));
                 }
-                (SymbolType::Variable(_), SymbolType::Function { .. }) => 
-                {
-                    return Err(format!("'{}' is already declared as a variable, cannot redefine as function", name));
+                (SymbolType::Variable(_), SymbolType::Function { .. }) => {
+                    return Err(format!(
+                        "'{}' is already declared as a variable, cannot redefine as function",
+                        name
+                    ));
                 }
             }
         }
@@ -116,25 +120,20 @@ impl Scope
         Ok(())
     }
 
-    fn lookup(&self, name: &str) -> Option<&Symbol> 
-    {
+    fn lookup(&self, name: &str) -> Option<&Symbol> {
         self.symbols.get(name)
     }
 }
 
-pub struct ScopeAnalyzer 
-{
+pub struct ScopeAnalyzer {
     scopes: Vec<Scope>, //Is Spaghetti stack of scopes
     errors: Vec<String>,
     current_function_return_type: Option<Type>, // Track current function's return type
 }
 
-impl ScopeAnalyzer 
-{
-    pub fn new() -> Self 
-    {
-        ScopeAnalyzer 
-        {
+impl ScopeAnalyzer {
+    pub fn new() -> Self {
+        ScopeAnalyzer {
             scopes: vec![Scope::new()], // 0th index is Global Scope
             errors: Vec::new(),
             current_function_return_type: None,
@@ -142,36 +141,28 @@ impl ScopeAnalyzer
     }
 
     // Entering a new scope
-    fn enter_scope(&mut self) 
-    {
+    fn enter_scope(&mut self) {
         self.scopes.push(Scope::new());
     }
 
     // Exiting the current scope
-    fn exit_scope(&mut self) 
-    {
+    fn exit_scope(&mut self) {
         self.scopes.pop();
     }
 
     // Helper to declare function in current scope which is the innermost scope
-    fn declare_symbol(&mut self, name: String, symbol: Symbol) 
-    {
-        if let Some(current_scope) = self.scopes.last_mut() 
-        {
-            if let Err(e) = current_scope.declare(name, symbol) 
-            {
+    fn declare_symbol(&mut self, name: String, symbol: Symbol) {
+        if let Some(current_scope) = self.scopes.last_mut() {
+            if let Err(e) = current_scope.declare(name, symbol) {
                 self.errors.push(e);
             }
         }
     }
 
     // Lookup helper function to iteratively search for symbol from current to all the way to outer global scope
-    fn lookup_symbol(&self, name: &str) -> Option<&Symbol> 
-    {
-        for scope in self.scopes.iter().rev() 
-        {
-            if let Some(symbol) = scope.lookup(name) 
-            {
+    fn lookup_symbol(&self, name: &str) -> Option<&Symbol> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(symbol) = scope.lookup(name) {
                 return Some(symbol);
             }
         }
@@ -179,10 +170,8 @@ impl ScopeAnalyzer
     }
 
     // Helper function to convert Token to string type
-    fn token_to_string(&self, token: &Token) -> String 
-    {
-        match token 
-        {
+    fn token_to_string(&self, token: &Token) -> String {
+        match token {
             Token::T_INT => "int".to_string(),
             Token::T_FLOAT => "float".to_string(),
             Token::T_BOOL => "bool".to_string(),
@@ -193,10 +182,8 @@ impl ScopeAnalyzer
     }
 
     // Helper function to convert Token to Type enum
-    fn token_to_type(&self, token: &Token) -> Type 
-    {
-        match token 
-        {
+    fn token_to_type(&self, token: &Token) -> Type {
+        match token {
             Token::T_INT => Type::Int,
             Token::T_FLOAT => Type::Float,
             Token::T_BOOL => Type::Bool,
@@ -207,17 +194,14 @@ impl ScopeAnalyzer
     }
 
     // Type inference for expressions
-    fn infer_expression_type(&mut self, expr: &Expression) -> Type 
-    {
+    fn infer_expression_type(&mut self, expr: &Expression) -> Type {
         match expr {
-            Expression::Literal(constant) => {
-                match constant {
-                    Constants::Int(_) => Type::Int,
-                    Constants::Float(_) => Type::Float,
-                    Constants::Str(_) => Type::String,
-                    Constants::Bool(_) => Type::Bool,
-                }
-            }
+            Expression::Literal(constant) => match constant {
+                Constants::Int(_) => Type::Int,
+                Constants::Float(_) => Type::Float,
+                Constants::Str(_) => Type::String,
+                Constants::Bool(_) => Type::Bool,
+            },
             Expression::Identifier(name) => {
                 if let Some(symbol) = self.lookup_symbol(name) {
                     match &symbol.symbol_type {
@@ -232,14 +216,21 @@ impl ScopeAnalyzer
                     Type::Unknown
                 }
             }
-            Expression::BinaryOperation { left, operator, right } => {
+            Expression::BinaryOperation {
+                left,
+                operator,
+                right,
+            } => {
                 let left_type = self.infer_expression_type(left);
                 let right_type = self.infer_expression_type(right);
 
                 match operator {
                     // Arithmetic operators: +, -, *, /, ^
-                    Token::T_PLUS_OPR | Token::T_MINUS_OPR | Token::T_MULTIPLY_OPR | 
-                    Token::T_DIVIDE_OPR | Token::T_EXPONENT_OPR => {
+                    Token::T_PLUS_OPR
+                    | Token::T_MINUS_OPR
+                    | Token::T_MULTIPLY_OPR
+                    | Token::T_DIVIDE_OPR
+                    | Token::T_EXPONENT_OPR => {
                         if left_type.is_compatible(&right_type) {
                             left_type.result_type(&right_type)
                         } else {
@@ -251,15 +242,19 @@ impl ScopeAnalyzer
                         }
                     }
                     // Comparison operators: ==, !=, <, >, <=, >=
-                    Token::T_EQUALS_OPR | Token::T_NOT_EQUALS_OPR | 
-                    Token::T_LESS_THAN_OPR | Token::T_GREATER_THAN_OPR |
-                    Token::T_LESS_THAN_EQUAL_TO_OPR | Token::T_GREATER_THAN_EQUAL_TO_OPR => {
+                    Token::T_EQUALS_OPR
+                    | Token::T_NOT_EQUALS_OPR
+                    | Token::T_LESS_THAN_OPR
+                    | Token::T_GREATER_THAN_OPR
+                    | Token::T_LESS_THAN_EQUAL_TO_OPR
+                    | Token::T_GREATER_THAN_EQUAL_TO_OPR => {
                         if left_type.is_compatible(&right_type) {
                             Type::Bool
                         } else {
                             self.errors.push(format!(
                                 "Type mismatch in comparison: cannot compare '{}' and '{}'",
-                                left_type.to_string(), right_type.to_string()
+                                left_type.to_string(),
+                                right_type.to_string()
                             ));
                             Type::Bool // Return bool for error recovery
                         }
@@ -299,7 +294,10 @@ impl ScopeAnalyzer
                     _ => Type::Unknown,
                 }
             }
-            Expression::UnaryOperation { operator, expression } => {
+            Expression::UnaryOperation {
+                operator,
+                expression,
+            } => {
                 let expr_type = self.infer_expression_type(expression);
                 match operator {
                     Token::T_MINUS_OPR => {
@@ -328,11 +326,12 @@ impl ScopeAnalyzer
             Expression::Assignment { left, right } => {
                 let left_type = self.infer_expression_type(left);
                 let right_type = self.infer_expression_type(right);
-                
+
                 if !left_type.is_compatible(&right_type) {
                     self.errors.push(format!(
                         "Type mismatch in assignment: cannot assign '{}' to '{}'",
-                        right_type.to_string(), left_type.to_string()
+                        right_type.to_string(),
+                        left_type.to_string()
                     ));
                 }
                 left_type
@@ -340,9 +339,7 @@ impl ScopeAnalyzer
             Expression::FunctionCall(func_call) => {
                 if let Some(symbol) = self.lookup_symbol(&func_call.identifier) {
                     match &symbol.symbol_type {
-                        SymbolType::Function { return_type, .. } => {
-                            Type::from_string(return_type)
-                        }
+                        SymbolType::Function { return_type, .. } => Type::from_string(return_type),
                         _ => Type::Unknown,
                     }
                 } else {
@@ -352,30 +349,25 @@ impl ScopeAnalyzer
         }
     }
 
-// AST parsing functions
+    // AST parsing functions
 
-    // Main function starting from root list 
-    pub fn analyze(&mut self, root_list: &RootList) 
-    {
-        for root in root_list 
-        {
+    // Main function starting from root list
+    pub fn analyze(&mut self, root_list: &RootList) {
+        for root in root_list {
             self.analyze_root(root);
         }
     }
 
-    fn analyze_root(&mut self, root: &Root) 
-    {
-        match root 
-        {
-            Root::Var(var_decl) => 
-            {
+    fn analyze_root(&mut self, root: &Root) {
+        match root {
+            Root::Var(var_decl) => {
                 // Checking initializing expression
                 self.analyze_expression(&var_decl.expression);
 
                 // Type checking: check if expression type matches variable type
                 let declared_type = self.token_to_type(&var_decl.type_token);
                 let expr_type = self.infer_expression_type(&var_decl.expression);
-                
+
                 if !declared_type.is_compatible(&expr_type) {
                     self.errors.push(format!(
                         "Type mismatch in variable declaration '{}': expected '{}', got '{}'",
@@ -389,28 +381,24 @@ impl ScopeAnalyzer
                 let type_str = self.token_to_string(&var_decl.type_token);
                 self.declare_symbol(
                     var_decl.identifier.clone(),
-                    Symbol 
-                    {
+                    Symbol {
                         name: var_decl.identifier.clone(),
                         symbol_type: SymbolType::Variable(type_str),
                     },
                 );
             }
-            Root::Func(func) => 
-            {
+            Root::Func(func) => {
                 self.analyze_function(func);
             }
         }
     }
 
-    fn analyze_function(&mut self, func: &FunctionStatement) 
-    {
+    fn analyze_function(&mut self, func: &FunctionStatement) {
         // Declare the function in the current (global) scope, nested functions not supported by syntax
         let return_type = self.token_to_string(&func.return_type);
 
         let mut param_types: Vec<String> = Vec::new();
-        for param in &func.parameters 
-        {
+        for param in &func.parameters {
             let type_str = self.token_to_string(&param.param_type);
             param_types.push(type_str);
         }
@@ -418,11 +406,9 @@ impl ScopeAnalyzer
         //Adding declaration of function to current scope
         self.declare_symbol(
             func.identifier.clone(),
-            Symbol 
-            {
+            Symbol {
                 name: func.identifier.clone(),
-                symbol_type: SymbolType::Function 
-                {
+                symbol_type: SymbolType::Function {
                     return_type: return_type.clone(),
                     params: param_types,
                 },
@@ -437,13 +423,11 @@ impl ScopeAnalyzer
         self.enter_scope();
 
         // Declaring parameters in function scope
-        for param in &func.parameters 
-        {
+        for param in &func.parameters {
             let param_type = self.token_to_string(&param.param_type);
             self.declare_symbol(
                 param.identifier.clone(),
-                Symbol 
-                {
+                Symbol {
                     name: param.identifier.clone(),
                     symbol_type: SymbolType::Variable(param_type),
                 },
@@ -452,7 +436,7 @@ impl ScopeAnalyzer
 
         // Recursively analyze function body and check for return statements
         let has_return = self.block_has_return(&func.block);
-        
+
         // Check if non-void function has a return statement
         if func_return_type != Type::Void && !has_return {
             self.errors.push(format!(
@@ -469,40 +453,49 @@ impl ScopeAnalyzer
         self.current_function_return_type = None;
     }
 
-    fn analyze_block(&mut self, block: &Block) 
-    {
-        for statement in &block.statements
-        {
+    fn analyze_block(&mut self, block: &Block) {
+        for statement in &block.statements {
             self.analyze_statement(statement);
         }
     }
 
     // Helper to check if a block contains a return statement
-    fn block_has_return(&mut self, block: &Block) -> bool 
-    {
+    fn block_has_return(&mut self, block: &Block) -> bool {
         self.analyze_block(block);
-        block.statements.iter().any(|stmt| self.statement_has_return(stmt))
+        block
+            .statements
+            .iter()
+            .any(|stmt| self.statement_has_return(stmt))
     }
 
     // Helper to check if a statement contains a return
-    fn statement_has_return(&self, statement: &Statement) -> bool 
-    {
+    fn statement_has_return(&self, statement: &Statement) -> bool {
         match statement {
             Statement::Return(_) => true,
             Statement::If(if_stmt) => {
                 // An if statement guarantees a return only if all branches return
-                let if_returns = if_stmt.block.statements.iter().any(|s| self.statement_has_return(s));
-                
+                let if_returns = if_stmt
+                    .block
+                    .statements
+                    .iter()
+                    .any(|s| self.statement_has_return(s));
+
                 let all_elif_return = if_stmt.elif_blocks.iter().all(|elif| {
-                    elif.block.statements.iter().any(|s| self.statement_has_return(s))
+                    elif.block
+                        .statements
+                        .iter()
+                        .any(|s| self.statement_has_return(s))
                 });
-                
+
                 let else_returns = if let Some(else_block) = &if_stmt.else_block {
-                    else_block.statements.iter().any(|s| self.statement_has_return(s))
+                    else_block
+                        .statements
+                        .iter()
+                        .any(|s| self.statement_has_return(s))
                 } else {
                     false
                 };
-                
+
                 // Only if we have if, all elifs, and else all returning
                 if_returns && all_elif_return && else_returns && if_stmt.else_block.is_some()
             }
@@ -510,18 +503,15 @@ impl ScopeAnalyzer
         }
     }
 
-    fn analyze_statement(&mut self, statement: &Statement) 
-    {
-        match statement 
-        {
-            Statement::VarDecl(var_decl) => 
-            {
+    fn analyze_statement(&mut self, statement: &Statement) {
+        match statement {
+            Statement::VarDecl(var_decl) => {
                 self.analyze_expression(&var_decl.expression);
-                
+
                 // Type checking: check if expression type matches variable type
                 let declared_type = self.token_to_type(&var_decl.type_token);
                 let expr_type = self.infer_expression_type(&var_decl.expression);
-                
+
                 if !declared_type.is_compatible(&expr_type) {
                     self.errors.push(format!(
                         "Type mismatch in variable declaration '{}': expected '{}', got '{}'",
@@ -530,25 +520,22 @@ impl ScopeAnalyzer
                         expr_type.to_string()
                     ));
                 }
-                
+
                 let type_str = self.token_to_string(&var_decl.type_token);
                 self.declare_symbol(
                     var_decl.identifier.clone(),
-                    Symbol 
-                    {
+                    Symbol {
                         name: var_decl.identifier.clone(),
                         symbol_type: SymbolType::Variable(type_str),
                     },
                 );
             }
-            Statement::Expr(expr) => 
-            {
+            Statement::Expr(expr) => {
                 self.analyze_expression(expr);
             }
-            Statement::Return(expr) => 
-            {
+            Statement::Return(expr) => {
                 self.analyze_expression(expr);
-                
+
                 // Type check return statement
                 let return_type = self.infer_expression_type(expr);
                 if let Some(expected_type) = &self.current_function_return_type {
@@ -561,101 +548,77 @@ impl ScopeAnalyzer
                     }
                 }
             }
-            Statement::If(if_stmt) => 
-            {
+            Statement::If(if_stmt) => {
                 self.analyze_if_statement(if_stmt);
             }
-            Statement::While(while_stmt) => 
-            {
+            Statement::While(while_stmt) => {
                 self.analyze_while_statement(while_stmt);
             }
-            Statement::For(for_stmt) => 
-            {
+            Statement::For(for_stmt) => {
                 self.analyze_for_statement(for_stmt);
             }
         }
     }
 
-    fn analyze_expression(&mut self, expr: &Expression) 
-    {
+    fn analyze_expression(&mut self, expr: &Expression) {
         match expr {
-            Expression::Literal(_) => 
-            {
+            Expression::Literal(_) => {
                 // No need to check scope for literals
                 //TODO: Type checking to be added here later
             }
-            Expression::Identifier(name) => 
-            {
-                if let Some(symbol) = self.lookup_symbol(name) 
-                {
+            Expression::Identifier(name) => {
+                if let Some(symbol) = self.lookup_symbol(name) {
                     // Checking if is identifier and not a function
-                    if matches!(symbol.symbol_type, SymbolType::Function { .. }) 
-                    {
-                        self.errors.push(format!("'{}' is a function, not a variable", name));
+                    if matches!(symbol.symbol_type, SymbolType::Function { .. }) {
+                        self.errors
+                            .push(format!("'{}' is a function, not a variable", name));
                     }
-                } 
-                else 
-                {
-                    self.errors.push(format!("Variable '{}' is not defined", name));
+                } else {
+                    self.errors
+                        .push(format!("Variable '{}' is not defined", name));
                 }
             }
-            Expression::BinaryOperation 
-            { 
-                left, right, .. 
-            } => 
-            {
+            Expression::BinaryOperation { left, right, .. } => {
                 self.analyze_expression(left);
                 self.analyze_expression(right);
             }
-            Expression::UnaryOperation 
-            { 
-                expression, .. 
-            } => 
-            {
+            Expression::UnaryOperation { expression, .. } => {
                 self.analyze_expression(expression);
             }
-            Expression::Assignment 
-            { 
-                left, right 
-            } => 
-            {
+            Expression::Assignment { left, right } => {
                 self.analyze_expression(left);
                 self.analyze_expression(right);
             }
-            Expression::FunctionCall(func_call) 
-            => 
-            {
+            Expression::FunctionCall(func_call) => {
                 self.analyze_function_call(func_call);
             }
         }
     }
 
-    fn analyze_function_call(&mut self, func_call: &FunctionCallStatement) 
-    {
-        
+    fn analyze_function_call(&mut self, func_call: &FunctionCallStatement) {
         // Check declaration and get function signature
-        let function_info = if let Some(symbol) = self.lookup_symbol(&func_call.identifier) 
-        {
+        let function_info = if let Some(symbol) = self.lookup_symbol(&func_call.identifier) {
             // Check symbol type
             match &symbol.symbol_type {
                 SymbolType::Variable(_) => {
-                    self.errors.push(format!("'{}' is a variable, not a function", func_call.identifier));
+                    self.errors.push(format!(
+                        "'{}' is a variable, not a function",
+                        func_call.identifier
+                    ));
                     None
                 }
-                SymbolType::Function { params, .. } => {
-                    Some(params.clone())
-                }
+                SymbolType::Function { params, .. } => Some(params.clone()),
             }
-        } 
-        else 
-        {
-            self.errors.push(format!("Function '{}' is not defined", func_call.identifier));
+        } else {
+            self.errors.push(format!(
+                "Function '{}' is not defined",
+                func_call.identifier
+            ));
             None
         };
 
         // Checking arguments
-        for arg in &func_call.args 
-        {
+        for arg in &func_call.args {
             self.analyze_expression(arg);
         }
 
@@ -670,10 +633,12 @@ impl ScopeAnalyzer
                 ));
             } else {
                 // Check each argument type
-                for (i, (arg, expected_type_str)) in func_call.args.iter().zip(params.iter()).enumerate() {
+                for (i, (arg, expected_type_str)) in
+                    func_call.args.iter().zip(params.iter()).enumerate()
+                {
                     let arg_type = self.infer_expression_type(arg);
                     let expected_type = Type::from_string(expected_type_str);
-                    
+
                     if !expected_type.is_compatible(&arg_type) {
                         self.errors.push(format!(
                             "Type mismatch in argument {} of function '{}': expected '{}', got '{}'",
@@ -688,11 +653,10 @@ impl ScopeAnalyzer
         }
     }
 
-    fn analyze_if_statement(&mut self, if_stmt: &IfStatement) 
-    {
+    fn analyze_if_statement(&mut self, if_stmt: &IfStatement) {
         // Condition expression check if (....)
         self.analyze_expression(&if_stmt.condition);
-        
+
         // Type check: condition must be boolean
         let condition_type = self.infer_expression_type(&if_stmt.condition);
         if condition_type != Type::Bool && condition_type != Type::Unknown {
@@ -708,10 +672,9 @@ impl ScopeAnalyzer
         self.exit_scope();
 
         // elifBlock, can be none or many
-        for elif in &if_stmt.elif_blocks 
-        {
+        for elif in &if_stmt.elif_blocks {
             self.analyze_expression(&elif.condition);
-            
+
             // Type check: elif condition must be boolean
             let elif_condition_type = self.infer_expression_type(&elif.condition);
             if elif_condition_type != Type::Bool && elif_condition_type != Type::Unknown {
@@ -720,25 +683,23 @@ impl ScopeAnalyzer
                     elif_condition_type.to_string()
                 ));
             }
-            
+
             self.enter_scope();
             self.analyze_block(&elif.block);
             self.exit_scope();
         }
 
         // else block
-        if let Some(else_block) = &if_stmt.else_block 
-        {
+        if let Some(else_block) = &if_stmt.else_block {
             self.enter_scope();
             self.analyze_block(else_block);
             self.exit_scope();
         }
     }
 
-    fn analyze_while_statement(&mut self, while_stmt: &WhileStatement) 
-    {
+    fn analyze_while_statement(&mut self, while_stmt: &WhileStatement) {
         self.analyze_expression(&while_stmt.condition);
-        
+
         // Type check: while condition must be boolean
         let condition_type = self.infer_expression_type(&while_stmt.condition);
         if condition_type != Type::Bool && condition_type != Type::Unknown {
@@ -753,20 +714,18 @@ impl ScopeAnalyzer
         self.exit_scope();
     }
 
-    fn analyze_for_statement(&mut self, for_stmt: &ForStatement) 
-    {
+    fn analyze_for_statement(&mut self, for_stmt: &ForStatement) {
         // makes its own scope variables in parenthesis
         self.enter_scope();
 
         // checking initialization if exists, for (int i= 0)
-        if let Some(init_var) = &for_stmt.init_var 
-        {
+        if let Some(init_var) = &for_stmt.init_var {
             self.analyze_expression(&init_var.expression);
-            
+
             // Type check initialization
             let declared_type = self.token_to_type(&init_var.type_token);
             let expr_type = self.infer_expression_type(&init_var.expression);
-            
+
             if !declared_type.is_compatible(&expr_type) {
                 self.errors.push(format!(
                     "Type mismatch in for loop initialization '{}': expected '{}', got '{}'",
@@ -775,12 +734,11 @@ impl ScopeAnalyzer
                     expr_type.to_string()
                 ));
             }
-            
+
             let type_str = self.token_to_string(&init_var.type_token);
             self.declare_symbol(
                 init_var.identifier.clone(),
-                Symbol 
-                {
+                Symbol {
                     name: init_var.identifier.clone(),
                     symbol_type: SymbolType::Variable(type_str),
                 },
@@ -788,10 +746,9 @@ impl ScopeAnalyzer
         }
 
         // Checking condition if exists
-        if let Some(condition) = &for_stmt.condition 
-        {
+        if let Some(condition) = &for_stmt.condition {
             self.analyze_expression(condition);
-            
+
             // Type check: for condition must be boolean
             let condition_type = self.infer_expression_type(condition);
             if condition_type != Type::Bool && condition_type != Type::Unknown {
@@ -803,8 +760,7 @@ impl ScopeAnalyzer
         }
 
         // Checking update if exists
-        if let Some(update) = &for_stmt.update 
-        {
+        if let Some(update) = &for_stmt.update {
             self.analyze_expression(update);
         }
 
@@ -814,33 +770,29 @@ impl ScopeAnalyzer
         self.exit_scope();
     }
 
-    pub fn get_errors(&self) -> &[String] 
-    {
+    pub fn get_errors(&self) -> &[String] {
         &self.errors
     }
 
-    pub fn is_valid(&self) -> bool 
-    {
+    pub fn is_valid(&self) -> bool {
         self.errors.is_empty()
     }
 }
 
 // Main
-pub fn semantic_analysis(ast: RootList) -> Result<(), Vec<String>> 
-{
+pub fn semantic_analysis(ast: RootList) -> Result<(), Vec<String>> {
     let mut analyzer = ScopeAnalyzer::new();
     analyzer.analyze(&ast);
-    
-    if analyzer.is_valid() 
-    {
+
+    if analyzer.is_valid() {
         println!("Scope and type analysis passed!");
         Ok(())
-    } 
-    else 
-    {
-        println!("Scope and type analysis failed with {} error(s):", analyzer.get_errors().len());
-        for (i, error) in analyzer.get_errors().iter().enumerate() 
-        {
+    } else {
+        println!(
+            "Scope and type analysis failed with {} error(s):",
+            analyzer.get_errors().len()
+        );
+        for (i, error) in analyzer.get_errors().iter().enumerate() {
             println!("  {}. {}", i + 1, error);
         }
         Err(analyzer.errors)

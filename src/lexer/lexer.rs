@@ -1,31 +1,12 @@
 use super::tokens::Token::{self, *};
 
 fn find_delim(c: char) -> bool {
-    return c.is_whitespace() ||
-        [
-            '(',
-            ')',
-            '[',
-            ']',
-            '{',
-            '}',
-            ',',
-            //'.',
-            ';',
-            '"',
-            '=',
-            '!',
-            '<',
-            '>',
-            '&',
-            '|',
-            '+',
-            '-',
-            '*',
-            '/',
-            '^',
-            '#',
-        ].contains(&c)
+    return c.is_whitespace()
+        || [
+            '(', ')', '[', ']', '{', '}', ',', //'.',
+            ';', '"', '=', '!', '<', '>', '&', '|', '+', '-', '*', '/', '^', '#',
+        ]
+        .contains(&c);
 }
 
 pub(crate) fn lex(code: String) -> Vec<Token> {
@@ -75,7 +56,6 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
                 _idx
             }
         };
-        
 
         let substr = code[curr..idx].to_string();
         //println!("Abhi wala: {substr}\n");
@@ -91,23 +71,17 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
 
         if substr == "fn" {
             tokens.push(T_FUNCTION);
-        }
-        else if substr == "if" {
+        } else if substr == "if" {
             tokens.push(T_IF);
-        }
-        else if substr == "else" {
+        } else if substr == "else" {
             tokens.push(T_ELSE);
-        }
-        else if substr == "elif" {
+        } else if substr == "elif" {
             tokens.push(T_ELSE_IF);
-        }
-        else if substr == "while" {
+        } else if substr == "while" {
             tokens.push(T_WHILE);
-        }
-        else if substr == "for" {
+        } else if substr == "for" {
             tokens.push(T_FOR);
-        }
-        else if substr == "return" {
+        } else if substr == "return" {
             tokens.push(T_RETURN);
         }
         // else if substr == "print" {
@@ -115,64 +89,50 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
         // }
         else if substr == "int" {
             tokens.push(T_INT);
-        }
-        else if substr == "float" {
+        } else if substr == "float" {
             tokens.push(T_FLOAT);
-        }
-        else if substr == "bool" {
+        } else if substr == "bool" {
             tokens.push(T_BOOL);
-        }
-        else if substr == "string" {
+        } else if substr == "string" {
             tokens.push(T_STRING);
-        }
-        else if substr == "\"" {
+        } else if substr == "\"" {
             tokens.push(T_DOUBLE_QUOTE);
             string_lit = !string_lit;
-        }
-        else if substr == "(" {
+        } else if substr == "(" {
             tokens.push(T_ROUND_BRACKET_OPEN);
-        }
-        else if substr == ")" {
+        } else if substr == ")" {
             tokens.push(T_ROUND_BRACKET_CLOSE);
-        }
-        else if substr == "[" {
+        } else if substr == "[" {
             tokens.push(T_SQUARE_BRACKET_OPEN);
-        }
-        else if substr == "]" {
+        } else if substr == "]" {
             tokens.push(T_SQUARE_BRACKET_CLOSE);
-        } 
-        else if substr == "{" {
+        } else if substr == "{" {
             tokens.push(T_CURLY_BRACKET_OPEN);
-        } 
-        else if substr == "}" {
+        } else if substr == "}" {
             tokens.push(T_CURLY_BRACKET_CLOSE);
-        } 
-        else if substr == "," {
+        } else if substr == "," {
             tokens.push(T_COMMA);
-        } 
+        }
         // else if substr == "." {
         //     tokens.push(T_DOT);
-        // } 
+        // }
         else if substr == ";" {
             tokens.push(T_SEMICOLON);
-        }
-        else if substr == "=" {
+        } else if substr == "=" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == "==" {
                 tokens.push(T_EQUALS_OPR);
                 idx = curr + 2;
             } else {
                 tokens.push(T_ASSIGNMENT_OPR);
             }
-        }
-        else if substr == "!" {
+        } else if substr == "!" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == "!=" {
                 tokens.push(T_NOT_EQUALS_OPR);
                 idx = curr + 2;
             } else {
                 tokens.push(T_NOT);
             }
-        }
-        else if substr == "<" {
+        } else if substr == "<" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == "<=" {
                 tokens.push(T_LESS_THAN_EQUAL_TO_OPR);
                 idx = curr + 2;
@@ -182,8 +142,7 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
             } else {
                 tokens.push(T_LESS_THAN_OPR);
             }
-        }
-        else if substr == ">" {
+        } else if substr == ">" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == ">=" {
                 tokens.push(T_GREATER_THAN_EQUAL_TO_OPR);
                 idx = curr + 2;
@@ -193,56 +152,44 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
             } else {
                 tokens.push(T_GREATER_THAN_OPR);
             }
-        }
-        else if substr == "&" {
+        } else if substr == "&" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == "&&" {
                 tokens.push(T_AND_OPR);
                 idx = curr + 2;
             } else {
                 tokens.push(T_AND_OPR); // single & treated as and too
             }
-        }
-        else if substr == "|" {
+        } else if substr == "|" {
             if curr + 1 < code.len() && &code[curr..curr + 2] == "||" {
                 tokens.push(T_OR_OPR);
                 idx = curr + 2;
             } else {
                 tokens.push(T_OR_OPR); // single | treated as OR too
             }
-        }
-        else if substr == "+" {
+        } else if substr == "+" {
             tokens.push(T_PLUS_OPR);
-        }
-        else if substr == "-" {
+        } else if substr == "-" {
             tokens.push(T_MINUS_OPR);
-        }
-        else if substr == "*" {
+        } else if substr == "*" {
             tokens.push(T_MULTIPLY_OPR);
-        }
-        else if substr == "/" {
+        } else if substr == "/" {
             tokens.push(T_DIVIDE_OPR);
-        }
-        else if substr == "^" {
+        } else if substr == "^" {
             tokens.push(T_EXPONENT_OPR);
-        }
-        else if string_lit {
+        } else if string_lit {
             tokens.push(T_STRINGLIT(substr.clone()));
             string_lit = false;
             tokens.push(T_DOUBLE_QUOTE);
             idx += 1; // move past closing quote
-        }
-        else if substr.chars().all(|c| c.is_digit(10)) {
+        } else if substr.chars().all(|c| c.is_digit(10)) {
             let val: i64 = substr.parse().unwrap();
             tokens.push(T_CONST_INT(val));
-        }
-        else if substr.parse::<f64>().is_ok() {
+        } else if substr.parse::<f64>().is_ok() {
             let val: f64 = substr.parse().unwrap();
             tokens.push(T_CONST_FLOAT(val));
-        }
-        else if substr == "true" || substr == "false" {
+        } else if substr == "true" || substr == "false" {
             tokens.push(T_CONST_BOOL(substr == "true"));
-        }
-        else {
+        } else {
             // not the job of lexer but requirment ma ikha ha...
             if substr.chars().next().unwrap().is_digit(10) {
                 panic!("Identifiers should not start with numbers: {}", substr);
@@ -251,7 +198,6 @@ pub(crate) fn lex(code: String) -> Vec<Token> {
         }
         curr = idx;
     }
-
 
     tokens
 }

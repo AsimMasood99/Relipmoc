@@ -19,11 +19,10 @@ fn get_code() -> String {
     return file_content;
 }
 
-
 fn main() {
     let code = get_code();
     let tokens = lexer::lexer::lex(code);
-    
+
     println!("{:?}\n\n", tokens);
 
     let ast = parser::parser::parser(tokens);
@@ -31,7 +30,7 @@ fn main() {
     println!("{:#?}\n\n", ast);
 
     match semantics::semantic_analysis::semantic_analysis(ast) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(_) => exit(1),
     }
 }
