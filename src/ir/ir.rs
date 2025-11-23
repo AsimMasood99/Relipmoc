@@ -1,52 +1,27 @@
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::types::BasicTypeEnum;
+use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
+use inkwell::values::{
+    BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue, PointerValue,
+};
+use inkwell::{AddressSpace, FloatPredicate, IntPredicate};
+
+use std::collections::HashMap;
 
 use crate::lexer::tokens::Token;
 use crate::parser::enums::*;
-
-// struct IR {
-//     pub ir_string: String,
-// }
-
-// impl IR {
-//     pub fn new() -> Self {
-//         IR {
-//             ir_string: String::new(),
-//         }
-//     }
-
-//     fn variable_ir() {
-
-//     }
-
-//     fn function_ir() {
-
-//     }
-
-//     pub fn generate_ir(self, ast: &RootList) -> Result<String, ()> {
-
-//         for root in ast {
-//             match root {
-//                 Root::Var(var_decl)  => {
-//                     Self::variable_ir();
-//                 }
-
-//                 Root::Func(func_decl) => {
-//                     Self::function_ir();
-//                 }
-//             }
-//         }
-
-//         Ok(self.ir_string)
-//     }
-// }
 
 struct codegen<'ctx> {
     context: &'ctx Context,
     module: Module<'ctx>,
     builder: Builder<'ctx>,
+    variables: HashMap<String, PointerValue<'ctx>>,
+    current_func: Option<FunctionValue<'ctx>>,
+    loop_stack: Vec<(
+        inkwell::basic_block::BasicBlock<'ctx>,
+        inkwell::basic_block::BasicBlock<'ctx>,
+    )>,
 }
 
 impl<'ctx> codegen<'ctx> {
@@ -55,60 +30,69 @@ impl<'ctx> codegen<'ctx> {
             context,
             module,
             builder,
+            variables: HashMap::new(),
+            current_func: None,
+            loop_stack: Vec::new(),
         }
     }
-    // TODO: Handle Strings
     fn tok_to_llvm_type(&self, type_tok: &Token) -> BasicTypeEnum<'ctx> {
         match type_tok {
             Token::T_INT => self.context.i64_type().into(),
             Token::T_FLOAT => self.context.f64_type().into(),
             Token::T_BOOL => self.context.bool_type().into(),
-            // Token::T_String => self.context.i8_type().ptr_type(inkwell::AddressSpace::Generic).into(),
+            Token::T_STRING => self
+                .context
+                .ptr_type(AddressSpace::default())
+                .as_basic_type_enum(),
             _ => panic!("Unsupported type token"),
         }
     }
 
-    fn global_var_ir(&self, var_decl: &VariableDeclaration) {
+    fn global_var_ir(&mut self, var_decl: &VariableDeclaration) -> Result<(), ()> {
         let var_type = self.tok_to_llvm_type(&var_decl.type_token);
-        self.module.add_global(var_type, None, &var_decl.identifier);
+        let global_context = self.module.add_global(var_type, None, &var_decl.identifier);
 
-        match var_decl.expression {
+        match &var_decl.expression {
             Expression::Literal(Constants::Int(value)) => {
-                let const_value = self.context.i64_type().const_int(value as u64, false);
-                self.module
-                    .get_global(&var_decl.identifier)
-                    .unwrap()
-                    .set_initializer(&const_value);
+                let const_value = self.context.i64_type().const_int(*value as u64, false);
+                global_context.set_initializer(&const_value);
             }
             Expression::Literal(Constants::Float(value)) => {
-                let const_value = self.context.f64_type().const_float(value);
-                self.module
-                    .get_global(&var_decl.identifier)
-                    .unwrap()
-                    .set_initializer(&const_value);
+                let const_value = self.context.f64_type().const_float(*value);
+                global_context.set_initializer(&const_value);
             }
             Expression::Literal(Constants::Bool(value)) => {
                 let const_value = self
                     .context
                     .bool_type()
-                    .const_int(if value { 1 } else { 0 }, false);
-                self.module
-                    .get_global(&var_decl.identifier)
-                    .unwrap()
-                    .set_initializer(&const_value);
+                    .const_int(if *value { 1 } else { 0 }, false);
+                global_context.set_initializer(&const_value);
             }
-            // TODO: Handle other methods of declaration.
+            Expression::Literal(Constants::Str(value)) => {
+                // build_global_string_ptr returns Result<GlobalValue, BuilderError>, unwrap or handle the error
+                let const_value = self
+                    .builder
+                    .build_global_string_ptr(value, "str")
+                    .expect("Failed to build global string");
+                global_context.set_initializer(&const_value.as_pointer_value());
+            }
             _ => {
-                // Handle other expression types as needed
+                panic!("Unsupported expression in global variable initializer");
             }
         }
+
+        self.variables.insert(
+            var_decl.identifier.clone(),
+            global_context.as_pointer_value(),
+        );
+        Ok(())
     }
 
     fn gen_ir_function(&self) {
         // Implement function IR generation logic here
     }
 
-    pub fn generate_ir(&self, ast: &RootList) -> Result<String, ()> {
+    pub fn generate_ir(&mut self, ast: &RootList) -> Result<String, ()> {
         for root in ast {
             match root {
                 Root::Var(var_decl) => {
