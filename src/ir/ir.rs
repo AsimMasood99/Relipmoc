@@ -57,17 +57,52 @@ impl<'ctx> codegen<'ctx> {
             builder,
         }
     }
-
-    fn tok_to_llvm_type(&self, type_tok: &Token) -> BasicTypeEnum {
+    // TODO: Handle Strings
+    fn tok_to_llvm_type(&self, type_tok: &Token) -> BasicTypeEnum<'ctx> {
         match type_tok {
             Token::T_INT => self.context.i64_type().into(),
             Token::T_FLOAT => self.context.f64_type().into(),
             Token::T_BOOL => self.context.bool_type().into(),
+            // Token::T_String => self.context.i8_type().ptr_type(inkwell::AddressSpace::Generic).into(),
             _ => panic!("Unsupported type token"),
         }
     }
 
-    fn gen_ir_variable(&self, var_decl: &VariableDeclaration) {}
+    fn global_var_ir(&self, var_decl: &VariableDeclaration) {
+        let var_type = self.tok_to_llvm_type(&var_decl.type_token);
+        self.module.add_global(var_type, None, &var_decl.identifier);
+
+        match var_decl.expression {
+            Expression::Literal(Constants::Int(value)) => {
+                let const_value = self.context.i64_type().const_int(value as u64, false);
+                self.module
+                    .get_global(&var_decl.identifier)
+                    .unwrap()
+                    .set_initializer(&const_value);
+            }
+            Expression::Literal(Constants::Float(value)) => {
+                let const_value = self.context.f64_type().const_float(value);
+                self.module
+                    .get_global(&var_decl.identifier)
+                    .unwrap()
+                    .set_initializer(&const_value);
+            }
+            Expression::Literal(Constants::Bool(value)) => {
+                let const_value = self
+                    .context
+                    .bool_type()
+                    .const_int(if value { 1 } else { 0 }, false);
+                self.module
+                    .get_global(&var_decl.identifier)
+                    .unwrap()
+                    .set_initializer(&const_value);
+            }
+            // TODO: Handle other methods of declaration.
+            _ => {
+                // Handle other expression types as needed
+            }
+        }
+    }
 
     fn gen_ir_function(&self) {
         // Implement function IR generation logic here
@@ -77,7 +112,7 @@ impl<'ctx> codegen<'ctx> {
         for root in ast {
             match root {
                 Root::Var(var_decl) => {
-                    self.gen_ir_variable(var_decl);
+                    self.global_var_ir(var_decl);
                 }
 
                 Root::Func(func_decl) => {
