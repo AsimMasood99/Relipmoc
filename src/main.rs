@@ -2,6 +2,7 @@ use std::fs;
 use std::path::Path;
 use std::process::exit;
 
+mod ir;
 mod lexer;
 mod parser;
 mod semantics;
@@ -28,6 +29,11 @@ fn main() {
     let ast = parser::parser::parser(tokens);
 
     println!("{:#?}\n\n", ast);
+
+    match ir::ir_generator::ir_generator(&ast) {
+        Ok(code) => println!("TAC IR:\n{}\n", code),
+        Err(_) => println!("Error generating IR"),
+    }
 
     match semantics::semantic_analysis::semantic_analysis(ast) {
         Ok(_) => {}
