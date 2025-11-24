@@ -30,13 +30,13 @@ fn main() {
 
     println!("{:#?}\n\n", ast);
 
+    match semantics::semantic_analysis::semantic_analysis(&ast) {
+        Ok(_) => {}
+        Err(_) => exit(1),
+    }
+
     match ir::ir_generator::ir_generator(&ast) {
         Ok(code) => println!("TAC IR:\n{}\n", code),
         Err(_) => println!("Error generating IR"),
-    }
-
-    match semantics::semantic_analysis::semantic_analysis(ast) {
-        Ok(_) => {}
-        Err(_) => exit(1),
     }
 }
